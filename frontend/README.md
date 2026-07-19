@@ -2,22 +2,30 @@
 
 Client applications: **React** (web) and **React Native** (mobile), both in **TypeScript**, styled with **Tailwind CSS**. Mobile-first and, for the POS, offline-capable.
 
-> **Status:** starter skeleton. A single **POS** web app (Vite + React + TypeScript + Tailwind) lives at the root of `frontend/` and builds. The multi-app monorepo split (below) happens as the Admin, KDS, and mobile surfaces are added.
+> **Status:** working POS shell (issue #10). A single **POS** web app (Vite + React + TypeScript + Tailwind + React Router) lives at the root of `frontend/`. It has an app shell with navigation and a functional **menu → cart → bill** flow running on **mock data** pending the backend (Menu #4, POS/Billing #7). Verified: `npm run build` (type-check + bundle) and a headless-Chromium smoke test of the flow both pass.
 
-## Current skeleton
+## Current structure
 
 ```
 frontend/
-├── package.json          ← Vite + React 18 + TypeScript + Tailwind 3
-├── vite.config.ts
-├── tsconfig.json
-├── tailwind.config.js · postcss.config.js
+├── package.json          ← Vite + React 18 + TS + Tailwind 3 + React Router 7
+├── vite.config.ts · tsconfig.json · tailwind.config.js · postcss.config.js
 ├── index.html
 └── src/
-    ├── main.tsx
-    ├── App.tsx           ← placeholder POS landing
-    └── index.css         ← Tailwind directives
+    ├── main.tsx · App.tsx          ← entry + router
+    ├── components/AppShell.tsx      ← sidebar nav + layout
+    ├── routes/                      ← PosPage, PlaceholderPage
+    ├── features/
+    │   ├── menu/mockMenu.ts         ← placeholder menu data (→ Menu service #4)
+    │   ├── cart/                    ← CartContext (reducer) + totals
+    │   └── pos/                     ← MenuGrid, CartPanel
+    ├── lib/
+    │   ├── api/client.ts            ← PosApi interface + mock impl (→ real HTTP client)
+    │   └── money.ts                 ← integer minor-unit money formatting
+    └── types/domain.ts             ← shared domain types
 ```
+
+**Money is handled in integer minor units** (paise/cents) throughout to avoid floating-point rounding; formatting to a currency string happens only at display time.
 
 Commands:
 
