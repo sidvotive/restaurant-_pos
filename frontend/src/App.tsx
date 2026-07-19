@@ -1,7 +1,10 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import AppShell from './components/AppShell'
 import PosPage from './routes/PosPage'
+import OrdersPage from './routes/OrdersPage'
+import KdsPage from './routes/KdsPage'
 import PlaceholderPage from './routes/PlaceholderPage'
+import { OrdersProvider } from './features/orders/OrdersStore'
 
 const router = createBrowserRouter([
   {
@@ -9,12 +12,17 @@ const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { index: true, element: <PosPage /> },
-      { path: 'orders', element: <PlaceholderPage title="Orders" issue="issue #6" /> },
+      { path: 'orders', element: <OrdersPage /> },
+      { path: 'kds', element: <KdsPage /> },
       { path: 'tables', element: <PlaceholderPage title="Tables" issue="issue #5" /> },
     ],
   },
 ])
 
 export default function App() {
-  return <RouterProvider router={router} />
+  return (
+    <OrdersProvider>
+      <RouterProvider router={router} />
+    </OrdersProvider>
+  )
 }

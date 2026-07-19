@@ -10,6 +10,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { to: '/', label: 'POS', icon: '🧾' },
   { to: '/orders', label: 'Orders', icon: '📋' },
+  { to: '/kds', label: 'Kitchen', icon: '👨‍🍳' },
   { to: '/tables', label: 'Tables', icon: '🍽️' },
 ]
 

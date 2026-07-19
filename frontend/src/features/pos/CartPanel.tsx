@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import type { OrderType } from '../../types/domain'
 import { formatMinor } from '../../lib/money'
 import { lineTotalMinor } from '../cart/cartTotals'
 import { useCart } from '../cart/CartContext'
+import { useOrders } from '../orders/OrdersStore'
 
 const ORDER_TYPES: { value: OrderType; label: string }[] = [
   { value: 'dine-in', label: 'Dine-in' },
@@ -11,6 +13,15 @@ const ORDER_TYPES: { value: OrderType; label: string }[] = [
 
 export default function CartPanel() {
   const { lines, totals, orderType, itemCount, add, decrement, clear, setOrderType } = useCart()
+  const { placeOrder } = useOrders()
+  const [lastSent, setLastSent] = useState<number | null>(null)
+
+  function handleSend() {
+    if (itemCount === 0) return
+    const order = placeOrder({ lines, orderType, totalMinor: totals.totalMinor })
+    setLastSent(order.number)
+    clear()
+  }
 
   return (
     <aside className="flex w-full max-w-sm flex-col border-l border-slate-800 bg-slate-900/60">
@@ -107,14 +118,20 @@ export default function CartPanel() {
           </button>
           <button
             type="button"
+            onClick={handleSend}
             disabled={itemCount === 0}
             className="flex-1 rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-40 hover:bg-amber-400"
           >
-            Charge {formatMinor(totals.totalMinor)}
+            Send to Kitchen · {formatMinor(totals.totalMinor)}
           </button>
         </div>
+        {lastSent !== null && (
+          <p className="mt-2 text-center text-[11px] text-emerald-400">
+            Order #{lastSent} sent to the kitchen.
+          </p>
+        )}
         <p className="mt-2 text-center text-[11px] text-slate-500">
-          Billing is wired to mock data pending the POS/Billing API (issue #7).
+          Orders are kept in-memory pending the Orders/Billing APIs (issues #6, #7).
         </p>
       </div>
     </aside>

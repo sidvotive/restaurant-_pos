@@ -2,7 +2,7 @@
 
 Client applications: **React** (web) and **React Native** (mobile), both in **TypeScript**, styled with **Tailwind CSS**. Mobile-first and, for the POS, offline-capable.
 
-> **Status:** working POS shell (issue #10). A single **POS** web app (Vite + React + TypeScript + Tailwind + React Router) lives at the root of `frontend/`. It has an app shell with navigation and a functional **menu → cart → bill** flow running on **mock data** pending the backend (Menu #4, POS/Billing #7). Verified: `npm run build` (type-check + bundle) and a headless-Chromium smoke test of the flow both pass.
+> **Status:** working POS + Orders + KDS shell (issues #10, #6, #8). A single web app (Vite + React + TypeScript + Tailwind + React Router) lives at the root of `frontend/`. It runs the **Phase-1 core loop client-side on mock persistence**: build a bill in the **POS**, **Send to Kitchen**, watch the ticket appear on the **Kitchen Display**, advance it (placed → preparing → ready → served), and see it reflected on the **Orders** page. Real data lands with the backend (Menu #4, Orders #6, POS/Billing #7). Verified: `npm run build`, `npm test` (Vitest), and a headless-Chromium smoke test of the full loop all pass.
 
 ## Current structure
 
@@ -12,12 +12,13 @@ frontend/
 ├── vite.config.ts · tsconfig.json · tailwind.config.js · postcss.config.js
 ├── index.html
 └── src/
-    ├── main.tsx · App.tsx          ← entry + router
+    ├── main.tsx · App.tsx          ← entry + router + OrdersProvider
     ├── components/AppShell.tsx      ← sidebar nav + layout
-    ├── routes/                      ← PosPage, PlaceholderPage
+    ├── routes/                      ← PosPage, OrdersPage, KdsPage, PlaceholderPage
     ├── features/
     │   ├── menu/mockMenu.ts         ← placeholder menu data (→ Menu service #4)
     │   ├── cart/                    ← CartContext (reducer) + totals
+    │   ├── orders/                  ← OrdersStore (reducer) + status metadata
     │   └── pos/                     ← MenuGrid, CartPanel
     ├── lib/
     │   ├── api/client.ts            ← PosApi interface + mock impl (→ real HTTP client)
@@ -44,6 +45,7 @@ money math and cart state:
 
 - `src/features/cart/cartTotals.test.ts` — subtotal/tax/total, integer rounding
 - `src/features/cart/cartReducer.test.ts` — add/increment/decrement/remove/clear, immutability
+- `src/features/orders/ordersReducer.test.ts` — place, status progression, advance targeting
 - `src/lib/money.test.ts` — currency formatting
 
 Run with `npm test` (CI runs it automatically on frontend changes).

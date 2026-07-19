@@ -28,3 +28,19 @@ export interface BillTotals {
   taxMinor: number
   totalMinor: number
 }
+
+// Kitchen/order lifecycle. The KDS advances placed → preparing → ready; the
+// floor marks ready orders served. Mirrors the Orders service contract (#6).
+export type OrderStatus = 'placed' | 'preparing' | 'ready' | 'served'
+
+export interface Order {
+  id: string
+  /** Human-friendly sequential number for staff. */
+  number: number
+  type: OrderType
+  lines: CartLine[]
+  totalMinor: number
+  status: OrderStatus
+  /** ISO timestamp. */
+  placedAt: string
+}
