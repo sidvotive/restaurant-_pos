@@ -15,10 +15,10 @@ Set up the ground the product is built on.
 - [x] Architecture documentation (high-level, multi-tenancy, tech stack, security, integrations)
 - [x] Delivery roadmap
 - [x] GitHub issue & PR templates
-- [ ] CI pipeline skeleton (build/lint/test placeholders)
-- [ ] Local dev environment (`docker-compose` for PostgreSQL, Redis, RabbitMQ)
-- [ ] Backend solution skeleton (Clean Architecture template for one service)
-- [ ] Frontend app skeleton (React + TypeScript + Tailwind)
+- [x] CI pipeline skeleton (change-filtered backend/frontend build/lint/test, guarded until code exists)
+- [x] Local dev environment (`docker-compose` for PostgreSQL, Redis, RabbitMQ, MinIO)
+- [x] Frontend app skeleton (Vite + React + TypeScript + Tailwind) — builds
+- [~] Backend solution skeleton (Identity Clean Architecture projects in place; `.sln` + first verified build pending — needs .NET 9 SDK)
 
 ## Phase 1 — Operational Core
 

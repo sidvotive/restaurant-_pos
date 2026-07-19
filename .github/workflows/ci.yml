@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Detect which parts of the monorepo changed so we only run relevant jobs.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      # Guard so this job is a no-op until a solution/csproj exists.
+      - name: Check for a .NET solution
+        id: sln
+        run: |
+          if ls backend/**/*.sln backend/*.sln >/dev/null 2>&1; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "No .NET solution yet — skipping build."
+          fi
+      - name: Restore
+        if: steps.sln.outputs.found == 'true'
+        run: dotnet restore backend
+      - name: Build
+        if: steps.sln.outputs.found == 'true'
+        run: dotnet build backend --no-restore --configuration Release
+      - name: Test
+        if: steps.sln.outputs.found == 'true'
+        run: dotnet test backend --no-build --configuration Release --verbosity normal
+
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # Guard so this job is a no-op until a package.json exists.
+      - name: Check for a frontend package
+        id: pkg
+        run: |
+          if [ -f frontend/package.json ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "No frontend package.json yet — skipping build."
+          fi
+      - name: Install
+        if: steps.pkg.outputs.found == 'true'
+        working-directory: frontend
+        run: npm ci
+      - name: Lint
+        if: steps.pkg.outputs.found == 'true'
+        working-directory: frontend
+        run: npm run lint --if-present
+      - name: Build
+        if: steps.pkg.outputs.found == 'true'
+        working-directory: frontend
+        run: npm run build --if-present
+      - name: Test
+        if: steps.pkg.outputs.found == 'true'
+        working-directory: frontend
+        run: npm test --if-present

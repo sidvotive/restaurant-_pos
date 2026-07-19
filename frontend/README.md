@@ -2,9 +2,33 @@
 
 Client applications: **React** (web) and **React Native** (mobile), both in **TypeScript**, styled with **Tailwind CSS**. Mobile-first and, for the POS, offline-capable.
 
-> **Status:** placeholder. No apps implemented yet. Phase 1 introduces the POS and Admin web surfaces — see [`../docs/roadmap.md`](../docs/roadmap.md).
+> **Status:** starter skeleton. A single **POS** web app (Vite + React + TypeScript + Tailwind) lives at the root of `frontend/` and builds. The multi-app monorepo split (below) happens as the Admin, KDS, and mobile surfaces are added.
 
-## Intended structure
+## Current skeleton
+
+```
+frontend/
+├── package.json          ← Vite + React 18 + TypeScript + Tailwind 3
+├── vite.config.ts
+├── tsconfig.json
+├── tailwind.config.js · postcss.config.js
+├── index.html
+└── src/
+    ├── main.tsx
+    ├── App.tsx           ← placeholder POS landing
+    └── index.css         ← Tailwind directives
+```
+
+Commands:
+
+```bash
+cd frontend
+npm install     # or: npm ci  (uses package-lock.json)
+npm run dev     # start the dev server
+npm run build   # type-check + production build
+```
+
+## Intended structure (as more surfaces are added)
 
 ```
 frontend/
@@ -19,7 +43,7 @@ frontend/
 │   └── shared/       ← shared types, utils, hooks
 ```
 
-> The exact tooling (monorepo manager, bundler) is decided when the first app is scaffolded in Phase 0/1.
+> The current single-app layout is promoted into this monorepo structure when the second surface (Admin or KDS) is added.
 
 ## Surfaces
 

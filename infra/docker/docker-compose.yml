@@ -1,0 +1,89 @@
+# Local development stack for the Restaurant POS platform.
+# Brings up the shared infrastructure services so backend services can run
+# against real dependencies. Not for production.
+#
+#   Usage:  docker compose -f infra/docker/docker-compose.yml up -d
+#   Stop:   docker compose -f infra/docker/docker-compose.yml down
+#   Wipe:   docker compose -f infra/docker/docker-compose.yml down -v
+#
+# Values are sourced from ../../.env (see ../../.env.example).
+
+name: restaurant-pos-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rpos-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rpos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rpos_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-rpos}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rpos}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: rpos-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rpos-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-rpos}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-rpos_dev_password}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"       # AMQP
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672" # management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # S3-compatible object storage for menu images, receipts, exports, backups.
+  minio:
+    image: minio/minio:latest
+    container_name: rpos-minio
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-rpos}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-rpos_dev_password}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"        # S3 API
+      - "${MINIO_CONSOLE_PORT:-9001}:9001" # console
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres-data:
+  redis-data:
+  rabbitmq-data:
+  minio-data:
