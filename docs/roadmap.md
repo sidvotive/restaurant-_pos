@@ -69,8 +69,17 @@ Maps to the blueprint's Phase 3.
 
 ---
 
+## Tracking on GitHub
+
+Phase 1 is tracked as issues, grouped by **phase labels** (`phase-0`, `phase-1`, …) and tied together by per-phase **epics**:
+
+- **Epic: Phase 1 — Operational Core** (#11) → child issues #1–#10
+- **Epic: Phase 2 — Back-of-house & Growth** (#12)
+- **Epic: Phase 3 — Scale & Intelligence** (#13)
+
+> Phases are grouped with **labels**, not GitHub Milestones — milestones can't be created through the tooling used here. If you prefer milestones, create them in the GitHub UI (one per phase) and reassign the issues; the labels can then be dropped.
+
 ## How to use this roadmap
 
-- Each unchecked item should become a GitHub issue (use the templates in `.github/ISSUE_TEMPLATE/`).
-- Group issues under milestones named after the phases.
-- Update the checkboxes here as work merges so the roadmap reflects reality.
+- Each unchecked item becomes a GitHub issue (use the templates in `.github/ISSUE_TEMPLATE/`); Phase 2/3 items are split out of their epics as those phases approach.
+- Update the checkboxes here — and the epic checklists — as work merges so the roadmap reflects reality.
