@@ -34,7 +34,19 @@ cd frontend
 npm install     # or: npm ci  (uses package-lock.json)
 npm run dev     # start the dev server
 npm run build   # type-check + production build
+npm test        # run the unit test suite (Vitest)
 ```
+
+## Tests
+
+Unit tests (Vitest) cover the pure logic where correctness matters most — the
+money math and cart state:
+
+- `src/features/cart/cartTotals.test.ts` — subtotal/tax/total, integer rounding
+- `src/features/cart/cartReducer.test.ts` — add/increment/decrement/remove/clear, immutability
+- `src/lib/money.test.ts` — currency formatting
+
+Run with `npm test` (CI runs it automatically on frontend changes).
 
 ## Intended structure (as more surfaces are added)
 
