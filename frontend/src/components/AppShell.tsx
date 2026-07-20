@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import { useAuth } from '../features/auth/AuthContext'
 
 interface NavItem {
   to: string
@@ -42,6 +43,8 @@ function SideNav() {
 }
 
 export default function AppShell(): ReactNode {
+  const { session, logout } = useAuth()
+
   return (
     <div className="flex h-screen bg-slate-950 text-slate-100">
       <aside className="hidden w-56 shrink-0 border-r border-slate-800 bg-slate-900/60 sm:flex sm:flex-col">
@@ -52,6 +55,21 @@ export default function AppShell(): ReactNode {
           <p className="mt-1 text-sm text-slate-400">Main Branch</p>
         </div>
         <SideNav />
+        <div className="mt-auto border-t border-slate-800 p-3">
+          {session && (
+            <p className="truncate px-1 pb-2 text-xs text-slate-400" title={session.email}>
+              {session.email}
+              <span className="ml-1 text-slate-600">· {session.role}</span>
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={logout}
+            className="w-full rounded-lg bg-slate-800 px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-700"
+          >
+            Sign out
+          </button>
+        </div>
       </aside>
       <main className="flex min-w-0 flex-1 flex-col">
         <Outlet />
