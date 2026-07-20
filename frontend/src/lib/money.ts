@@ -10,3 +10,13 @@ export function formatMinor(minor: number): string {
     currency: CURRENCY,
   }).format(minor / 100)
 }
+
+/**
+ * Parses a user-entered major-unit amount (e.g. "280" or "280.50") into integer
+ * minor units. Returns null for input that is not a valid non-negative amount.
+ */
+export function parseAmountToMinor(input: string): number | null {
+  const trimmed = input.trim()
+  if (!/^\d+(\.\d{1,2})?$/.test(trimmed)) return null
+  return Math.round(Number.parseFloat(trimmed) * 100)
+}

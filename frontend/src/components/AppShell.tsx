@@ -13,6 +13,7 @@ const navItems: NavItem[] = [
   { to: '/orders', label: 'Orders', icon: '📋' },
   { to: '/kds', label: 'Kitchen', icon: '👨‍🍳' },
   { to: '/tables', label: 'Tables', icon: '🍽️' },
+  { to: '/menu', label: 'Menu', icon: '📖' },
 ]
 
 function SideNav() {

@@ -1,37 +1,33 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { Category, Product } from '../../types/domain'
-import { api } from '../../lib/api/client'
 import { formatMinor } from '../../lib/money'
 import { useCart } from '../cart/CartContext'
+import { useMenu } from '../menu/MenuStore'
 
 export default function MenuGrid() {
   const { add } = useCart()
-  const [categories, setCategories] = useState<Category[]>([])
-  const [products, setProducts] = useState<Product[]>([])
-  const [activeCategory, setActiveCategory] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { categories, products } = useMenu()
+  const [activeCategory, setActiveCategory] = useState<string | null>(categories[0]?.id ?? null)
 
+  // Keep the active tab valid as categories are added/removed in Menu admin.
   useEffect(() => {
-    let cancelled = false
-    Promise.all([api.getCategories(), api.getProducts()]).then(([cats, prods]) => {
-      if (cancelled) return
-      setCategories(cats)
-      setProducts(prods)
-      setActiveCategory(cats[0]?.id ?? null)
-      setLoading(false)
-    })
-    return () => {
-      cancelled = true
+    if (categories.length === 0) {
+      setActiveCategory(null)
+    } else if (!categories.some((c) => c.id === activeCategory)) {
+      setActiveCategory(categories[0].id)
     }
-  }, [])
+  }, [categories, activeCategory])
 
   const visibleProducts = useMemo(
     () => products.filter((p) => p.categoryId === activeCategory),
     [products, activeCategory],
   )
 
-  if (loading) {
-    return <div className="p-6 text-slate-400">Loading menu…</div>
+  if (categories.length === 0) {
+    return (
+      <div className="p-6 text-slate-400">
+        No menu yet. Add categories and products in the Menu section.
+      </div>
+    )
   }
 
   return (

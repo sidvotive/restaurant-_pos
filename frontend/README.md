@@ -2,7 +2,7 @@
 
 Client applications: **React** (web) and **React Native** (mobile), both in **TypeScript**, styled with **Tailwind CSS**. Mobile-first and, for the POS, offline-capable.
 
-> **Status:** authenticated POS + Orders + KDS + Tables shell (issues #10, #6, #8, #5, #2). The app is **gated behind a login** (mock auth mirroring the Identity `/api/auth` contract; sessions persist and expire), then runs the Phase-1 core loop below. The **Tables** floor view feeds table selection into the POS: picking a free table tags the dine-in order and seats the table. The layout is **responsive** — a sidebar on desktop, a bottom tab bar on mobile, with the POS menu/cart stacking on small screens. A single web app (Vite + React + TypeScript + Tailwind + React Router) lives at the root of `frontend/`. It runs the **Phase-1 core loop client-side on mock persistence**: build a bill in the **POS**, **Send to Kitchen**, watch the ticket appear on the **Kitchen Display**, advance it (placed → preparing → ready → served), and see it reflected on the **Orders** page. Orders are **persisted to `localStorage`**, so they survive a refresh (an early step toward the real offline-capable POS). Real data lands with the backend (Menu #4, Orders #6, POS/Billing #7). Verified: `npm run build`, `npm test` (Vitest), and headless-Chromium smoke tests of the loop and of persistence-across-reload all pass.
+> **Status:** authenticated POS + Orders + KDS + Tables + Menu shell (issues #10, #6, #8, #5, #4, #2). The **Menu** admin manages categories/products (CRUD, persisted) and is the source of truth the POS reads from — edits show up live in billing. The app is **gated behind a login** (mock auth mirroring the Identity `/api/auth` contract; sessions persist and expire), then runs the Phase-1 core loop below. The **Tables** floor view feeds table selection into the POS: picking a free table tags the dine-in order and seats the table. The layout is **responsive** — a sidebar on desktop, a bottom tab bar on mobile, with the POS menu/cart stacking on small screens. A single web app (Vite + React + TypeScript + Tailwind + React Router) lives at the root of `frontend/`. It runs the **Phase-1 core loop client-side on mock persistence**: build a bill in the **POS**, **Send to Kitchen**, watch the ticket appear on the **Kitchen Display**, advance it (placed → preparing → ready → served), and see it reflected on the **Orders** page. Orders are **persisted to `localStorage`**, so they survive a refresh (an early step toward the real offline-capable POS). Real data lands with the backend (Menu #4, Orders #6, POS/Billing #7). Verified: `npm run build`, `npm test` (Vitest), and headless-Chromium smoke tests of the loop and of persistence-across-reload all pass.
 
 ## Current structure
 
@@ -14,18 +14,17 @@ frontend/
 └── src/
     ├── main.tsx · App.tsx          ← entry + router + Auth/Orders providers
     ├── components/                  ← AppShell (nav + sign-out), RequireAuth (route guard)
-    ├── routes/                      ← LoginPage, PosPage, OrdersPage, KdsPage, TablesPage
+    ├── routes/                      ← LoginPage, PosPage, OrdersPage, KdsPage, TablesPage, MenuPage
     ├── features/
     │   ├── auth/                    ← AuthContext (session + persistence), session validity
-    │   ├── menu/mockMenu.ts         ← placeholder menu data (→ Menu service #4)
+    │   ├── menu/                    ← MenuStore (reducer, CRUD) + seed data; POS reads this
     │   ├── cart/                    ← CartContext (reducer) + totals
     │   ├── orders/                  ← OrdersStore (reducer) + status metadata
     │   ├── tables/                  ← TablesStore (reducer) + floor grouping/summary
     │   └── pos/                     ← MenuGrid, CartPanel
     ├── lib/
-    │   ├── api/client.ts            ← PosApi interface + mock impl (→ real HTTP client)
     │   ├── api/authClient.ts        ← AuthApi (matches Identity #2 contract) + mock impl
-    │   ├── money.ts                 ← integer minor-unit money formatting
+    │   ├── money.ts                 ← integer minor-unit money formatting + parsing
     │   └── persist.ts               ← safe localStorage load/save helpers
     └── types/domain.ts             ← shared domain types
 ```
@@ -51,10 +50,11 @@ money math and cart state:
 - `src/features/cart/cartReducer.test.ts` — add/increment/decrement/remove/clear, immutability
 - `src/features/orders/ordersReducer.test.ts` — place, status progression, advance targeting, clear
 - `src/features/tables/tablesReducer.test.ts` — select/status, auto-deselect, area grouping, summary
+- `src/features/menu/menuReducer.test.ts` — category/product CRUD, remove-category cascade
 - `src/features/auth/session.test.ts` — session validity / expiry
 - `src/lib/api/authClient.test.ts` — mock login/register success + rejection paths
 - `src/lib/persist.test.ts` — save/load round-trip, fallbacks, storage-unavailable no-op
-- `src/lib/money.test.ts` — currency formatting
+- `src/lib/money.test.ts` — currency formatting + amount parsing
 
 Run with `npm test` (CI runs it automatically on frontend changes).
 
