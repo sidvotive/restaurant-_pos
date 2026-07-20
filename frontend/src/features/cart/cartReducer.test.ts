@@ -60,4 +60,26 @@ describe('cartReducer', () => {
     cartReducer(before, { type: 'add', product: paneer })
     expect(before).toEqual(snapshot)
   })
+
+  it('sets discount and tip, flooring negatives at zero', () => {
+    let state = cartReducer(initialCartState, { type: 'setDiscount', discountMinor: 5000 })
+    state = cartReducer(state, { type: 'setTip', tipMinor: 2000 })
+    expect(state.discountMinor).toBe(5000)
+    expect(state.tipMinor).toBe(2000)
+
+    state = cartReducer(state, { type: 'setDiscount', discountMinor: -100 })
+    expect(state.discountMinor).toBe(0)
+  })
+
+  it('clear resets lines and adjustments but keeps the order type', () => {
+    let state = cartReducer(initialCartState, { type: 'setOrderType', orderType: 'takeaway' })
+    state = cartReducer(state, { type: 'add', product: paneer })
+    state = cartReducer(state, { type: 'setDiscount', discountMinor: 5000 })
+    state = cartReducer(state, { type: 'setTip', tipMinor: 2000 })
+    state = cartReducer(state, { type: 'clear' })
+    expect(state.lines).toHaveLength(0)
+    expect(state.discountMinor).toBe(0)
+    expect(state.tipMinor).toBe(0)
+    expect(state.orderType).toBe('takeaway')
+  })
 })

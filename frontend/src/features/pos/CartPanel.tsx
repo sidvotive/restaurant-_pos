@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { OrderType } from '../../types/domain'
-import { formatMinor } from '../../lib/money'
+import { formatMinor, parseAmountToMinor } from '../../lib/money'
 import { lineTotalMinor } from '../cart/cartTotals'
 import { useCart } from '../cart/CartContext'
 import { useOrders } from '../orders/OrdersStore'
@@ -13,12 +13,25 @@ const ORDER_TYPES: { value: OrderType; label: string }[] = [
 ]
 
 export default function CartPanel() {
-  const { lines, totals, orderType, itemCount, add, decrement, clear, setOrderType } = useCart()
+  const { lines, totals, orderType, itemCount, add, decrement, clear, setOrderType, setDiscount, setTip } =
+    useCart()
   const { placeOrder } = useOrders()
   const { selectedTable, select, setStatus } = useTables()
   const [lastSent, setLastSent] = useState<number | null>(null)
+  const [discountInput, setDiscountInput] = useState('')
+  const [tipInput, setTipInput] = useState('')
 
   const dineInTable = orderType === 'dine-in' ? selectedTable : null
+
+  function handleDiscountChange(value: string) {
+    setDiscountInput(value)
+    setDiscount(parseAmountToMinor(value) ?? 0)
+  }
+
+  function handleTipChange(value: string) {
+    setTipInput(value)
+    setTip(parseAmountToMinor(value) ?? 0)
+  }
 
   function handleSend() {
     if (itemCount === 0) return
@@ -35,6 +48,8 @@ export default function CartPanel() {
     }
     setLastSent(order.number)
     clear()
+    setDiscountInput('')
+    setTipInput('')
   }
 
   return (
@@ -115,15 +130,52 @@ export default function CartPanel() {
       </div>
 
       <div className="border-t border-slate-800 p-4">
+        <div className="mb-3 flex gap-2">
+          <label className="flex-1">
+            <span className="text-[11px] text-slate-500">Discount (₹)</span>
+            <input
+              value={discountInput}
+              onChange={(e) => handleDiscountChange(e.target.value)}
+              inputMode="decimal"
+              placeholder="0"
+              aria-label="Discount"
+              className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm outline-none focus:border-amber-500"
+            />
+          </label>
+          <label className="flex-1">
+            <span className="text-[11px] text-slate-500">Tip (₹)</span>
+            <input
+              value={tipInput}
+              onChange={(e) => handleTipChange(e.target.value)}
+              inputMode="decimal"
+              placeholder="0"
+              aria-label="Tip"
+              className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm outline-none focus:border-amber-500"
+            />
+          </label>
+        </div>
+
         <dl className="space-y-1 text-sm">
           <div className="flex justify-between text-slate-400">
             <dt>Subtotal</dt>
             <dd>{formatMinor(totals.subtotalMinor)}</dd>
           </div>
+          {totals.discountMinor > 0 && (
+            <div className="flex justify-between text-emerald-400">
+              <dt>Discount</dt>
+              <dd>−{formatMinor(totals.discountMinor)}</dd>
+            </div>
+          )}
           <div className="flex justify-between text-slate-400">
             <dt>Tax</dt>
             <dd>{formatMinor(totals.taxMinor)}</dd>
           </div>
+          {totals.tipMinor > 0 && (
+            <div className="flex justify-between text-slate-400">
+              <dt>Tip</dt>
+              <dd>{formatMinor(totals.tipMinor)}</dd>
+            </div>
+          )}
           <div className="flex justify-between text-base font-semibold text-slate-100">
             <dt>Total</dt>
             <dd>{formatMinor(totals.totalMinor)}</dd>

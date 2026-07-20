@@ -19,6 +19,8 @@ interface CartContextValue {
   remove: (productId: string) => void
   clear: () => void
   setOrderType: (orderType: OrderType) => void
+  setDiscount: (discountMinor: number) => void
+  setTip: (tipMinor: number) => void
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
@@ -27,7 +29,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialCartState)
 
   const value = useMemo<CartContextValue>(() => {
-    const totals = computeTotals(state.lines)
+    const totals = computeTotals(state.lines, {
+      discountMinor: state.discountMinor,
+      tipMinor: state.tipMinor,
+    })
     const itemCount = state.lines.reduce((n, l) => n + l.quantity, 0)
     return {
       lines: state.lines,
@@ -39,6 +44,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       remove: (productId) => dispatch({ type: 'remove', productId }),
       clear: () => dispatch({ type: 'clear' }),
       setOrderType: (orderType) => dispatch({ type: 'setOrderType', orderType }),
+      setDiscount: (discountMinor) => dispatch({ type: 'setDiscount', discountMinor }),
+      setTip: (tipMinor) => dispatch({ type: 'setTip', tipMinor }),
     }
   }, [state])
 

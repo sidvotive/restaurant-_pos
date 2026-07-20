@@ -22,7 +22,13 @@ describe('lineTotalMinor', () => {
 
 describe('computeTotals', () => {
   it('returns zeros for an empty cart', () => {
-    expect(computeTotals([])).toEqual({ subtotalMinor: 0, taxMinor: 0, totalMinor: 0 })
+    expect(computeTotals([])).toEqual({
+      subtotalMinor: 0,
+      discountMinor: 0,
+      taxMinor: 0,
+      tipMinor: 0,
+      totalMinor: 0,
+    })
   })
 
   it('sums lines, applies tax, and totals correctly', () => {
@@ -45,5 +51,33 @@ describe('computeTotals', () => {
     expect(totals.taxMinor).toBe(17)
     expect(totals.totalMinor).toBe(350)
     expect(Number.isInteger(totals.taxMinor)).toBe(true)
+  })
+
+  it('applies a discount before tax and adds the tip after', () => {
+    // subtotal 700.00; discount 100.00 → taxable 600.00; tax 30.00; tip 50.00
+    // total = 600 + 30 + 50 = 680.00
+    const totals = computeTotals([line(28000, 1), line(42000, 1)], {
+      discountMinor: 10000,
+      tipMinor: 5000,
+    })
+    expect(totals.subtotalMinor).toBe(70000)
+    expect(totals.discountMinor).toBe(10000)
+    expect(totals.taxMinor).toBe(3000)
+    expect(totals.tipMinor).toBe(5000)
+    expect(totals.totalMinor).toBe(68000)
+  })
+
+  it('clamps a discount to the subtotal and never goes negative', () => {
+    const totals = computeTotals([line(10000, 1)], { discountMinor: 999999 })
+    expect(totals.discountMinor).toBe(10000)
+    expect(totals.taxMinor).toBe(0)
+    expect(totals.totalMinor).toBe(0)
+  })
+
+  it('ignores negative discount/tip inputs', () => {
+    const totals = computeTotals([line(10000, 1)], { discountMinor: -500, tipMinor: -500 })
+    expect(totals.discountMinor).toBe(0)
+    expect(totals.tipMinor).toBe(0)
+    expect(totals.totalMinor).toBe(10500)
   })
 })
