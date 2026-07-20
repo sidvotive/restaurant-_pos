@@ -42,11 +42,41 @@ function SideNav() {
   )
 }
 
+/** Bottom tab bar shown on small screens where the sidebar is hidden. */
+function BottomNav({ onSignOut }: { onSignOut: () => void }) {
+  const itemClass = 'flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium'
+  return (
+    <nav className="flex border-t border-slate-800 bg-slate-900/80 sm:hidden">
+      {navItems.map((item) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          end={item.to === '/'}
+          className={({ isActive }) =>
+            [itemClass, isActive ? 'text-amber-300' : 'text-slate-400'].join(' ')
+          }
+        >
+          <span className="text-lg" aria-hidden>
+            {item.icon}
+          </span>
+          <span>{item.label}</span>
+        </NavLink>
+      ))}
+      <button type="button" onClick={onSignOut} className={`${itemClass} text-slate-400`}>
+        <span className="text-lg" aria-hidden>
+          ⏻
+        </span>
+        <span>Sign out</span>
+      </button>
+    </nav>
+  )
+}
+
 export default function AppShell(): ReactNode {
   const { session, logout } = useAuth()
 
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-100">
+    <div className="flex h-screen flex-col bg-slate-950 text-slate-100 sm:flex-row">
       <aside className="hidden w-56 shrink-0 border-r border-slate-800 bg-slate-900/60 sm:flex sm:flex-col">
         <div className="px-4 py-5">
           <p className="text-xs font-semibold uppercase tracking-widest text-amber-400">
@@ -71,9 +101,12 @@ export default function AppShell(): ReactNode {
           </button>
         </div>
       </aside>
-      <main className="flex min-w-0 flex-1 flex-col">
+
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Outlet />
       </main>
+
+      <BottomNav onSignOut={logout} />
     </div>
   )
 }

@@ -38,7 +38,7 @@ export default function CartPanel() {
   }
 
   return (
-    <aside className="flex w-full max-w-sm flex-col border-l border-slate-800 bg-slate-900/60">
+    <aside className="flex max-h-[55vh] w-full flex-col border-t border-slate-800 bg-slate-900/60 md:max-h-none md:max-w-sm md:border-l md:border-t-0">
       <div className="border-b border-slate-800 p-4">
         <div className="flex gap-2">
           {ORDER_TYPES.map((ot) => (
