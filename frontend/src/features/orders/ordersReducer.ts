@@ -7,6 +7,7 @@ export interface OrdersState {
 export type OrdersAction =
   | { type: 'place'; order: Order }
   | { type: 'advance'; orderId: string }
+  | { type: 'clear' }
 
 export const initialOrdersState: OrdersState = { orders: [] }
 
@@ -33,6 +34,8 @@ export function ordersReducer(state: OrdersState, action: OrdersAction): OrdersS
           o.id === action.orderId ? { ...o, status: nextStatus(o.status) } : o,
         ),
       }
+    case 'clear':
+      return { orders: [] }
     default:
       return state
   }

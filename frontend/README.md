@@ -2,7 +2,7 @@
 
 Client applications: **React** (web) and **React Native** (mobile), both in **TypeScript**, styled with **Tailwind CSS**. Mobile-first and, for the POS, offline-capable.
 
-> **Status:** working POS + Orders + KDS shell (issues #10, #6, #8). A single web app (Vite + React + TypeScript + Tailwind + React Router) lives at the root of `frontend/`. It runs the **Phase-1 core loop client-side on mock persistence**: build a bill in the **POS**, **Send to Kitchen**, watch the ticket appear on the **Kitchen Display**, advance it (placed → preparing → ready → served), and see it reflected on the **Orders** page. Real data lands with the backend (Menu #4, Orders #6, POS/Billing #7). Verified: `npm run build`, `npm test` (Vitest), and a headless-Chromium smoke test of the full loop all pass.
+> **Status:** working POS + Orders + KDS shell (issues #10, #6, #8). A single web app (Vite + React + TypeScript + Tailwind + React Router) lives at the root of `frontend/`. It runs the **Phase-1 core loop client-side on mock persistence**: build a bill in the **POS**, **Send to Kitchen**, watch the ticket appear on the **Kitchen Display**, advance it (placed → preparing → ready → served), and see it reflected on the **Orders** page. Orders are **persisted to `localStorage`**, so they survive a refresh (an early step toward the real offline-capable POS). Real data lands with the backend (Menu #4, Orders #6, POS/Billing #7). Verified: `npm run build`, `npm test` (Vitest), and headless-Chromium smoke tests of the loop and of persistence-across-reload all pass.
 
 ## Current structure
 
@@ -22,7 +22,8 @@ frontend/
     │   └── pos/                     ← MenuGrid, CartPanel
     ├── lib/
     │   ├── api/client.ts            ← PosApi interface + mock impl (→ real HTTP client)
-    │   └── money.ts                 ← integer minor-unit money formatting
+    │   ├── money.ts                 ← integer minor-unit money formatting
+    │   └── persist.ts               ← safe localStorage load/save helpers
     └── types/domain.ts             ← shared domain types
 ```
 
@@ -45,7 +46,8 @@ money math and cart state:
 
 - `src/features/cart/cartTotals.test.ts` — subtotal/tax/total, integer rounding
 - `src/features/cart/cartReducer.test.ts` — add/increment/decrement/remove/clear, immutability
-- `src/features/orders/ordersReducer.test.ts` — place, status progression, advance targeting
+- `src/features/orders/ordersReducer.test.ts` — place, status progression, advance targeting, clear
+- `src/lib/persist.test.ts` — save/load round-trip, fallbacks, storage-unavailable no-op
 - `src/lib/money.test.ts` — currency formatting
 
 Run with `npm test` (CI runs it automatically on frontend changes).

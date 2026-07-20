@@ -1,6 +1,9 @@
-import { createContext, useContext, useMemo, useReducer, useRef, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNode } from 'react'
 import type { CartLine, Order, OrderType } from '../../types/domain'
-import { ordersReducer, initialOrdersState } from './ordersReducer'
+import { loadJson, saveJson } from '../../lib/persist'
+import { ordersReducer, initialOrdersState, type OrdersState } from './ordersReducer'
+
+const STORAGE_KEY = 'rpos.orders'
 
 interface PlaceOrderInput {
   lines: CartLine[]
@@ -12,6 +15,7 @@ interface OrdersContextValue {
   orders: Order[]
   placeOrder: (input: PlaceOrderInput) => Order
   advance: (orderId: string) => void
+  clearAll: () => void
 }
 
 const OrdersContext = createContext<OrdersContextValue | null>(null)
@@ -23,18 +27,30 @@ function newId(): string {
     : Math.random().toString(36).slice(2)
 }
 
+/** Next human-friendly order number: one past the highest existing number. */
+function nextNumber(orders: Order[]): number {
+  return orders.reduce((max, o) => Math.max(max, o.number), 0) + 1
+}
+
 export function OrdersProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(ordersReducer, initialOrdersState)
-  const counter = useRef(0)
+  const [state, dispatch] = useReducer(
+    ordersReducer,
+    initialOrdersState,
+    (init): OrdersState => ({ orders: loadJson<Order[]>(STORAGE_KEY, init.orders) }),
+  )
+
+  // Persist on every change so orders survive a refresh.
+  useEffect(() => {
+    saveJson(STORAGE_KEY, state.orders)
+  }, [state.orders])
 
   const value = useMemo<OrdersContextValue>(
     () => ({
       orders: state.orders,
       placeOrder: ({ lines, orderType, totalMinor }) => {
-        counter.current += 1
         const order: Order = {
           id: newId(),
-          number: counter.current,
+          number: nextNumber(state.orders),
           type: orderType,
           lines,
           totalMinor,
@@ -45,6 +61,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
         return order
       },
       advance: (orderId) => dispatch({ type: 'advance', orderId }),
+      clearAll: () => dispatch({ type: 'clear' }),
     }),
     [state],
   )

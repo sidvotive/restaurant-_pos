@@ -5,12 +5,21 @@ import { STATUS_META } from '../features/orders/status'
 const TIME_FMT = new Intl.DateTimeFormat('en-IN', { hour: '2-digit', minute: '2-digit' })
 
 export default function OrdersPage() {
-  const { orders } = useOrders()
+  const { orders, clearAll } = useOrders()
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="border-b border-slate-800 px-6 py-4">
+      <header className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
         <h1 className="text-lg font-semibold">Orders</h1>
+        {orders.length > 0 && (
+          <button
+            type="button"
+            onClick={clearAll}
+            className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-700"
+          >
+            Clear all
+          </button>
+        )}
       </header>
 
       {orders.length === 0 ? (

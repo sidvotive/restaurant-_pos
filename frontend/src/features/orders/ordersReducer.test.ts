@@ -58,4 +58,12 @@ describe('ordersReducer', () => {
     )
     expect(state.orders[0].status).toBe('placed')
   })
+
+  it('clears all orders', () => {
+    const state = ordersReducer(
+      { orders: [makeOrder('a', 1), makeOrder('b', 2)] },
+      { type: 'clear' },
+    )
+    expect(state.orders).toEqual([])
+  })
 })
