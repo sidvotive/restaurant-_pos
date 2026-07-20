@@ -16,6 +16,12 @@ function Ticket({ order, onAdvance }: { order: Order; onAdvance: (id: string) =>
       </div>
       <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
         <span className="uppercase tracking-wide">{order.type}</span>
+        {order.tableLabel && (
+          <>
+            <span>·</span>
+            <span className="text-slate-400">{order.tableLabel}</span>
+          </>
+        )}
         <span>·</span>
         <span>{TIME_FMT.format(new Date(order.placedAt))}</span>
       </div>

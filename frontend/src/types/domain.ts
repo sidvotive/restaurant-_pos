@@ -43,4 +43,17 @@ export interface Order {
   status: OrderStatus
   /** ISO timestamp. */
   placedAt: string
+  /** Dine-in table label, when the order is tied to a table. */
+  tableLabel?: string
+}
+
+// Floor / table management (issue #5).
+export type TableStatus = 'free' | 'occupied' | 'reserved'
+
+export interface RestaurantTable {
+  id: string
+  label: string
+  area: string
+  seats: number
+  status: TableStatus
 }

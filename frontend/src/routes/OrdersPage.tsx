@@ -38,8 +38,11 @@ export default function OrdersPage() {
                   className="flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/60 p-4"
                 >
                   <span className="text-sm font-semibold text-slate-100">#{order.number}</span>
-                  <span className="w-20 text-xs uppercase tracking-wide text-slate-400">
+                  <span className="w-28 text-xs uppercase tracking-wide text-slate-400">
                     {order.type}
+                    {order.tableLabel && (
+                      <span className="ml-1 text-slate-500">· {order.tableLabel}</span>
+                    )}
                   </span>
                   <span className="flex-1 text-sm text-slate-400">
                     {items} item{items === 1 ? '' : 's'}

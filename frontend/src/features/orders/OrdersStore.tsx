@@ -9,6 +9,7 @@ interface PlaceOrderInput {
   lines: CartLine[]
   orderType: OrderType
   totalMinor: number
+  tableLabel?: string
 }
 
 interface OrdersContextValue {
@@ -47,7 +48,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
   const value = useMemo<OrdersContextValue>(
     () => ({
       orders: state.orders,
-      placeOrder: ({ lines, orderType, totalMinor }) => {
+      placeOrder: ({ lines, orderType, totalMinor, tableLabel }) => {
         const order: Order = {
           id: newId(),
           number: nextNumber(state.orders),
@@ -56,6 +57,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
           totalMinor,
           status: 'placed',
           placedAt: new Date().toISOString(),
+          tableLabel,
         }
         dispatch({ type: 'place', order })
         return order

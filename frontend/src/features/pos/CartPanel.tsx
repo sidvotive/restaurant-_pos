@@ -4,6 +4,7 @@ import { formatMinor } from '../../lib/money'
 import { lineTotalMinor } from '../cart/cartTotals'
 import { useCart } from '../cart/CartContext'
 import { useOrders } from '../orders/OrdersStore'
+import { useTables } from '../tables/TablesStore'
 
 const ORDER_TYPES: { value: OrderType; label: string }[] = [
   { value: 'dine-in', label: 'Dine-in' },
@@ -14,11 +15,24 @@ const ORDER_TYPES: { value: OrderType; label: string }[] = [
 export default function CartPanel() {
   const { lines, totals, orderType, itemCount, add, decrement, clear, setOrderType } = useCart()
   const { placeOrder } = useOrders()
+  const { selectedTable, select, setStatus } = useTables()
   const [lastSent, setLastSent] = useState<number | null>(null)
+
+  const dineInTable = orderType === 'dine-in' ? selectedTable : null
 
   function handleSend() {
     if (itemCount === 0) return
-    const order = placeOrder({ lines, orderType, totalMinor: totals.totalMinor })
+    const order = placeOrder({
+      lines,
+      orderType,
+      totalMinor: totals.totalMinor,
+      tableLabel: dineInTable?.label,
+    })
+    // Seat the table and release the selection for the next order.
+    if (dineInTable) {
+      setStatus(dineInTable.id, 'occupied')
+      select(null)
+    }
     setLastSent(order.number)
     clear()
   }
@@ -43,6 +57,15 @@ export default function CartPanel() {
             </button>
           ))}
         </div>
+        {orderType === 'dine-in' && (
+          <p className="mt-3 text-center text-xs text-slate-400">
+            {dineInTable ? (
+              <>Table <span className="font-semibold text-amber-300">{dineInTable.label}</span></>
+            ) : (
+              <>No table selected — pick one from Tables, or send as a walk-in.</>
+            )}
+          </p>
+        )}
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
