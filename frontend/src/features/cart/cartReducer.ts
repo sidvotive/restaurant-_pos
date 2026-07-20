@@ -3,6 +3,8 @@ import type { CartLine, OrderType, Product } from '../../types/domain'
 export interface CartState {
   lines: CartLine[]
   orderType: OrderType
+  discountMinor: number
+  tipMinor: number
 }
 
 export type CartAction =
@@ -11,8 +13,15 @@ export type CartAction =
   | { type: 'remove'; productId: string }
   | { type: 'clear' }
   | { type: 'setOrderType'; orderType: OrderType }
+  | { type: 'setDiscount'; discountMinor: number }
+  | { type: 'setTip'; tipMinor: number }
 
-export const initialCartState: CartState = { lines: [], orderType: 'dine-in' }
+export const initialCartState: CartState = {
+  lines: [],
+  orderType: 'dine-in',
+  discountMinor: 0,
+  tipMinor: 0,
+}
 
 export function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
@@ -45,9 +54,14 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
     case 'remove':
       return { ...state, lines: state.lines.filter((l) => l.product.id !== action.productId) }
     case 'clear':
-      return { ...state, lines: [] }
+      // Reset the whole bill (lines and adjustments) but keep the order type.
+      return { ...state, lines: [], discountMinor: 0, tipMinor: 0 }
     case 'setOrderType':
       return { ...state, orderType: action.orderType }
+    case 'setDiscount':
+      return { ...state, discountMinor: Math.max(0, action.discountMinor) }
+    case 'setTip':
+      return { ...state, tipMinor: Math.max(0, action.tipMinor) }
     default:
       return state
   }

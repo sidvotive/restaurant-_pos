@@ -25,7 +25,12 @@ export interface CartLine {
 export interface BillTotals {
   /** Sum of line totals before tax/discount, in minor units. */
   subtotalMinor: number
+  /** Discount applied to the subtotal (never more than the subtotal). */
+  discountMinor: number
+  /** Tax on the discounted subtotal. */
   taxMinor: number
+  /** Gratuity added after tax. */
+  tipMinor: number
   totalMinor: number
 }
 
