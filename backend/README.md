@@ -2,31 +2,65 @@
 
 .NET 9 Web API services following **Clean Architecture** with **CQRS** (MediatR) and **SignalR** for real-time features.
 
-> **Status:** starter skeleton. A first service — **Identity** — is laid out in four Clean Architecture projects under `src/Services/Identity/` with a minimal running API (`/health`, `/ping` via MediatR). The solution file and first verified `dotnet build` are the immediate next step (this environment has no .NET SDK, so the skeleton has not yet been build-verified). Phase 1 fleshes out Identity, Menu, Orders, POS, and Tables — see [`../docs/roadmap.md`](../docs/roadmap.md).
+> **Status:** Identity service with a working **auth vertical** (register / login / refresh), laid out in four Clean Architecture projects under `src/Services/Identity/`.
+>
+> ⚠️ **Not yet build-verified.** This environment has no .NET SDK, so the code below has **not** been compiled or run. The first `dotnet build` (issue #1) may surface package-version or wiring fixes. Braces/namespaces were checked by hand; treat the versions as a starting point.
 
-## Current skeleton (Identity service)
+## Identity service
 
 ```
 backend/
-├── Directory.Build.props                       ← net9.0, nullable, implicit usings
+├── Directory.Build.props                          ← net9.0, nullable, implicit usings
 └── src/Services/Identity/
-    ├── Identity.Domain/        ← Entity base, Tenant entity
-    ├── Identity.Application/   ← MediatR wiring, PingQuery (CQRS demo)
-    ├── Identity.Infrastructure/← EF Core IdentityDbContext, Npgsql wiring
-    └── Identity.Api/           ← Program.cs, /health + /ping, appsettings.json
+    ├── Identity.Domain/         ← Entity, Tenant, User (+ UserRole), RefreshToken
+    ├── Identity.Application/    ← CQRS: Register/Login/Refresh commands + handlers,
+    │                              ports (IApplicationDbContext, IPasswordHasher,
+    │                              IJwtTokenService, IRefreshTokenService), AuthResponse
+    ├── Identity.Infrastructure/ ← EF Core IdentityDbContext, PBKDF2 password hashing,
+    │                              JWT issuance, SHA-256 refresh-token hashing
+    └── Identity.Api/            ← Program.cs, JWT bearer auth, /api/auth endpoints,
+                                   ProblemDetails exception middleware, appsettings.json
 ```
 
-To create the solution and build (requires the .NET 9 SDK):
+### Auth endpoints
+
+| Method + path        | Body                                          | Returns |
+|----------------------|-----------------------------------------------|---------|
+| `POST /api/auth/register` | `tenantName, email, password, fullName`   | `AuthResponse` (access + refresh token) |
+| `POST /api/auth/login`    | `email, password`                         | `AuthResponse` |
+| `POST /api/auth/refresh`  | `refreshToken`                            | `AuthResponse` (rotated tokens) |
+
+- Passwords are hashed with ASP.NET Core's PBKDF2 `PasswordHasher`.
+- Access tokens are signed JWTs carrying `sub`, `email`, `tenant_id`, and role claims.
+- Refresh tokens are random 256-bit values; only their SHA-256 hash is stored, and refresh **rotates** (old token revoked and linked to its replacement).
+- `Register` creates a tenant plus its initial **Owner** user.
+
+> Fine-grained RBAC (permission catalogue), branches, and user invitations are the remaining parts of issue #2.
+
+### Build & run (requires the .NET 9 SDK + a running PostgreSQL — see `infra/`)
 
 ```bash
 cd backend
 dotnet new sln -n RestaurantPos
-dotnet sln add src/Services/Identity/**/*.csproj
+dotnet sln add src/Services/Identity/Identity.Domain/Identity.Domain.csproj \
+               src/Services/Identity/Identity.Application/Identity.Application.csproj \
+               src/Services/Identity/Identity.Infrastructure/Identity.Infrastructure.csproj \
+               src/Services/Identity/Identity.Api/Identity.Api.csproj
 dotnet build
+
+# Create the initial migration and apply it:
+dotnet tool install --global dotnet-ef      # once
+dotnet ef migrations add InitialIdentity \
+  --project src/Services/Identity/Identity.Infrastructure \
+  --startup-project src/Services/Identity/Identity.Api
+dotnet ef database update \
+  --project src/Services/Identity/Identity.Infrastructure \
+  --startup-project src/Services/Identity/Identity.Api
+
 dotnet run --project src/Services/Identity/Identity.Api
 ```
 
-Once a `.sln` exists, CI builds and tests the backend automatically.
+> **Before any real use, replace the placeholder `Jwt:Secret`** in `appsettings.json` with a long random value supplied via configuration/secret store (it is dev-only). Once a `.sln` exists, CI builds and tests the backend automatically.
 
 ## Intended structure
 
