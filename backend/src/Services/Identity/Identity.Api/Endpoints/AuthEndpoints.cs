@@ -1,7 +1,4 @@
-using Identity.Application.Auth.Login;
-using Identity.Application.Auth.Refresh;
-using Identity.Application.Auth.Register;
-using MediatR;
+using Identity.Application.Auth;
 
 namespace Identity.Api.Endpoints;
 
@@ -11,14 +8,14 @@ public static class AuthEndpoints
     {
         var group = app.MapGroup("/api/auth").WithTags("Auth");
 
-        group.MapPost("/register", async (RegisterCommand command, ISender sender) =>
-            Results.Ok(await sender.Send(command)));
+        group.MapPost("/register", async (RegisterRequest request, IAuthService auth, CancellationToken ct) =>
+            Results.Ok(await auth.RegisterAsync(request, ct)));
 
-        group.MapPost("/login", async (LoginCommand command, ISender sender) =>
-            Results.Ok(await sender.Send(command)));
+        group.MapPost("/login", async (LoginRequest request, IAuthService auth, CancellationToken ct) =>
+            Results.Ok(await auth.LoginAsync(request, ct)));
 
-        group.MapPost("/refresh", async (RefreshCommand command, ISender sender) =>
-            Results.Ok(await sender.Send(command)));
+        group.MapPost("/refresh", async (RefreshRequest request, IAuthService auth, CancellationToken ct) =>
+            Results.Ok(await auth.RefreshAsync(request, ct)));
 
         return app;
     }

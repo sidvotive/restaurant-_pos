@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Application layer: CQRS commands/queries and handlers (MediatR), DTOs, ports. -->
+  <!-- Application layer: use-case services, DTOs, ports. -->
   <ItemGroup>
-    <PackageReference Include="MediatR" Version="12.4.1" />
     <!-- IApplicationDbContext exposes EF Core DbSets (Clean Architecture, à la
-         the common ASP.NET template). Keeps handlers persistence-aware without
+         the common ASP.NET template). Keeps services persistence-aware without
          binding to a concrete provider. -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
   </ItemGroup>

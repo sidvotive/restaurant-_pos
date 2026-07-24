@@ -1,6 +1,6 @@
 # Backend
 
-.NET 9 Web API services following **Clean Architecture** with **CQRS** (MediatR) and **SignalR** for real-time features.
+.NET 9 Web API services following **Clean Architecture**, with **SignalR** for real-time features. Use cases are plain injectable services (no MediatR/CQRS for now — kept deliberately simple).
 
 > **Status:** Identity service with a working **auth vertical** (register / login / refresh), laid out in four Clean Architecture projects under `src/Services/Identity/`.
 >
@@ -13,7 +13,7 @@ backend/
 ├── Directory.Build.props                          ← net9.0, nullable, implicit usings
 └── src/Services/Identity/
     ├── Identity.Domain/         ← Entity, Tenant, User (+ UserRole), RefreshToken
-    ├── Identity.Application/    ← CQRS: Register/Login/Refresh commands + handlers,
+    ├── Identity.Application/    ← AuthService (register/login/refresh) + request DTOs,
     │                              ports (IApplicationDbContext, IPasswordHasher,
     │                              IJwtTokenService, IRefreshTokenService), AuthResponse
     ├── Identity.Infrastructure/ ← EF Core IdentityDbContext, PBKDF2 password hashing,
@@ -72,7 +72,7 @@ backend/
 │   └── Services/
 │       ├── Identity/
 │       │   ├── Identity.Domain/          ← entities, value objects, domain events
-│       │   ├── Identity.Application/     ← CQRS commands/queries, handlers (MediatR), DTOs
+│       │   ├── Identity.Application/     ← use-case services, DTOs, ports
 │       │   ├── Identity.Infrastructure/  ← EF Core, repositories, external adapters
 │       │   └── Identity.Api/             ← controllers/minimal APIs, SignalR hubs, DI
 │       ├── Menu/
@@ -89,7 +89,7 @@ backend/
 | Layer            | Depends on        | Contains |
 |------------------|-------------------|----------|
 | **Domain**       | nothing           | Entities, value objects, domain events, business rules. |
-| **Application**  | Domain            | CQRS commands/queries and handlers (MediatR), validation, ports (interfaces). |
+| **Application**  | Domain            | Use-case services (e.g. `AuthService`), request/response DTOs, validation, ports (interfaces). |
 | **Infrastructure** | Application, Domain | EF Core/PostgreSQL, Redis, RabbitMQ, storage, external adapters. |
 | **Api**          | Application, Infrastructure | HTTP endpoints, SignalR hubs, auth, composition root. |
 

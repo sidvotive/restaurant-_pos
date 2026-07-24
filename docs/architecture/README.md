@@ -12,7 +12,7 @@ This section documents how the Restaurant POS platform is structured. It is inte
 
 ## Guiding architectural decisions
 
-1. **Clean Architecture per service.** Each backend service separates Domain, Application (CQRS via MediatR), Infrastructure, and API layers so business rules stay independent of frameworks.
+1. **Clean Architecture per service.** Each backend service separates Domain, Application (plain use-case services — CQRS/MediatR deferred), Infrastructure, and API layers so business rules stay independent of frameworks.
 2. **Service-oriented, event-aware.** Services communicate synchronously through the API gateway for queries/commands and asynchronously through RabbitMQ for domain events (e.g. `OrderPlaced`, `PaymentSettled`, `StockDepleted`).
 3. **Multi-tenancy is a first-class concern**, not an afterthought — every data access path is tenant-scoped. See [multi-tenancy.md](multi-tenancy.md).
 4. **Real-time where it matters.** SignalR powers live table status, the Kitchen Display System, and order timelines.

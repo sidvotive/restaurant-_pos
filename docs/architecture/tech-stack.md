@@ -17,8 +17,8 @@ The stack below is the target for the platform. Choices favour a productive, wel
 |------------------|---------|
 | **.NET 9 Web API** | Service runtime. |
 | **Clean Architecture** | Domain / Application / Infrastructure / API separation per service. |
-| **CQRS**         | Separate command and query paths for clarity and scalability. |
-| **MediatR**      | In-process request/handler dispatch for the CQRS pipeline. |
+| **CQRS**         | _Deferred._ Kept as an option; services currently expose plain use-case methods. |
+| **MediatR**      | _Deferred._ Not used for now — use cases are injectable services, not command/handler pairs. |
 | **SignalR**      | Real-time push (table status, KDS, order timeline, notifications). |
 
 ## Data
