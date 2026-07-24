@@ -52,6 +52,19 @@ export interface Order {
   tableLabel?: string
 }
 
+// A parked bill that can be resumed later (POS hold/resume, issue #7).
+export interface HeldBill {
+  id: string
+  lines: CartLine[]
+  orderType: OrderType
+  discountMinor: number
+  tipMinor: number
+  tableId?: string
+  tableLabel?: string
+  /** ISO timestamp when the bill was held. */
+  heldAt: string
+}
+
 // Floor / table management (issue #5).
 export type TableStatus = 'free' | 'occupied' | 'reserved'
 

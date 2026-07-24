@@ -11,6 +11,7 @@ import { AuthProvider } from './features/auth/AuthContext'
 import { OrdersProvider } from './features/orders/OrdersStore'
 import { TablesProvider } from './features/tables/TablesStore'
 import { MenuProvider } from './features/menu/MenuStore'
+import { HeldBillsProvider } from './features/held/HeldBillsStore'
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -38,7 +39,9 @@ export default function App() {
       <MenuProvider>
         <TablesProvider>
           <OrdersProvider>
-            <RouterProvider router={router} />
+            <HeldBillsProvider>
+              <RouterProvider router={router} />
+            </HeldBillsProvider>
           </OrdersProvider>
         </TablesProvider>
       </MenuProvider>

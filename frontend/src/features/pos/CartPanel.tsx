@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { OrderType } from '../../types/domain'
 import { formatMinor, parseAmountToMinor } from '../../lib/money'
 import { lineTotalMinor } from '../cart/cartTotals'
 import { useCart } from '../cart/CartContext'
 import { useOrders } from '../orders/OrdersStore'
 import { useTables } from '../tables/TablesStore'
+import { useHeldBills } from '../held/HeldBillsStore'
 
 const ORDER_TYPES: { value: OrderType; label: string }[] = [
   { value: 'dine-in', label: 'Dine-in' },
@@ -13,15 +14,43 @@ const ORDER_TYPES: { value: OrderType; label: string }[] = [
 ]
 
 export default function CartPanel() {
-  const { lines, totals, orderType, itemCount, add, decrement, clear, setOrderType, setDiscount, setTip } =
-    useCart()
+  const {
+    lines,
+    totals,
+    orderType,
+    itemCount,
+    discountMinor,
+    tipMinor,
+    add,
+    decrement,
+    clear,
+    setOrderType,
+    setDiscount,
+    setTip,
+  } = useCart()
   const { placeOrder } = useOrders()
   const { selectedTable, select, setStatus } = useTables()
+  const { hold } = useHeldBills()
   const [lastSent, setLastSent] = useState<number | null>(null)
   const [discountInput, setDiscountInput] = useState('')
   const [tipInput, setTipInput] = useState('')
 
   const dineInTable = orderType === 'dine-in' ? selectedTable : null
+
+  // Keep the inputs in sync when discount/tip change from outside typing
+  // (e.g. resuming a held bill, or Clear/Send resetting the cart).
+  useEffect(() => {
+    if ((parseAmountToMinor(discountInput) ?? 0) !== discountMinor) {
+      setDiscountInput(discountMinor ? (discountMinor / 100).toString() : '')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discountMinor])
+  useEffect(() => {
+    if ((parseAmountToMinor(tipInput) ?? 0) !== tipMinor) {
+      setTipInput(tipMinor ? (tipMinor / 100).toString() : '')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tipMinor])
 
   function handleDiscountChange(value: string) {
     setDiscountInput(value)
@@ -48,8 +77,20 @@ export default function CartPanel() {
     }
     setLastSent(order.number)
     clear()
-    setDiscountInput('')
-    setTipInput('')
+  }
+
+  function handleHold() {
+    if (itemCount === 0) return
+    hold({
+      lines,
+      orderType,
+      discountMinor,
+      tipMinor,
+      tableId: dineInTable?.id,
+      tableLabel: dineInTable?.label,
+    })
+    if (dineInTable) select(null)
+    clear()
   }
 
   return (
@@ -187,9 +228,17 @@ export default function CartPanel() {
             type="button"
             onClick={clear}
             disabled={itemCount === 0}
-            className="rounded-xl bg-slate-800 px-4 py-3 text-sm font-medium text-slate-300 disabled:opacity-40 hover:bg-slate-700"
+            className="rounded-xl bg-slate-800 px-3 py-3 text-sm font-medium text-slate-300 disabled:opacity-40 hover:bg-slate-700"
           >
             Clear
+          </button>
+          <button
+            type="button"
+            onClick={handleHold}
+            disabled={itemCount === 0}
+            className="rounded-xl bg-slate-800 px-3 py-3 text-sm font-medium text-slate-300 disabled:opacity-40 hover:bg-slate-700"
+          >
+            Hold
           </button>
           <button
             type="button"
@@ -197,7 +246,7 @@ export default function CartPanel() {
             disabled={itemCount === 0}
             className="flex-1 rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-40 hover:bg-amber-400"
           >
-            Send to Kitchen · {formatMinor(totals.totalMinor)}
+            Send · {formatMinor(totals.totalMinor)}
           </button>
         </div>
         {lastSent !== null && (

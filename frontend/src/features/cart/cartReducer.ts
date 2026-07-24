@@ -15,6 +15,7 @@ export type CartAction =
   | { type: 'setOrderType'; orderType: OrderType }
   | { type: 'setDiscount'; discountMinor: number }
   | { type: 'setTip'; tipMinor: number }
+  | { type: 'load'; state: CartState }
 
 export const initialCartState: CartState = {
   lines: [],
@@ -62,6 +63,9 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
       return { ...state, discountMinor: Math.max(0, action.discountMinor) }
     case 'setTip':
       return { ...state, tipMinor: Math.max(0, action.tipMinor) }
+    case 'load':
+      // Replace the whole cart (e.g. resuming a held bill).
+      return action.state
     default:
       return state
   }
