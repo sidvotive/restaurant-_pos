@@ -8,6 +8,8 @@ using Menu.Application;
 using Menu.Infrastructure;
 using Orders.Application;
 using Orders.Infrastructure;
+using Inventory.Application;
+using Inventory.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -20,6 +22,8 @@ builder.Services.AddMenuApplication();
 builder.Services.AddMenuInfrastructure(builder.Configuration);
 builder.Services.AddOrdersApplication();
 builder.Services.AddOrdersInfrastructure(builder.Configuration);
+builder.Services.AddInventoryApplication();
+builder.Services.AddInventoryInfrastructure(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 
 // JWT bearer authentication using the same signing key the tokens are issued with.
@@ -65,5 +69,7 @@ app.MapAuthEndpoints();
 app.MapMenuEndpoints();
 // Orders module (tenant-scoped).
 app.MapOrderEndpoints();
+// Inventory module (tenant-scoped).
+app.MapInventoryEndpoints();
 
 app.Run();

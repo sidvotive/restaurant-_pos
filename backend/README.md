@@ -2,7 +2,7 @@
 
 .NET 9 Web API services following **Clean Architecture**, with **SignalR** for real-time features. Use cases are plain injectable services (no MediatR/CQRS for now — kept deliberately simple).
 
-> **Status:** modular-monolith API hosting the **Identity** (auth), **Menu** (tenant-scoped CRUD), and **Orders** (place/advance/cancel + line snapshots) modules. Identity's build was verified locally; the **Menu** and **Orders** modules were added afterward and should be built/migrated locally (this environment has no .NET SDK — braces/namespaces checked by hand, patterns mirror Identity).
+> **Status:** modular-monolith API hosting the **Identity** (auth), **Menu**, **Orders**, and **Inventory** modules (all tenant-scoped). Identity's build was verified locally; the other modules were added afterward and should be built/migrated locally (this environment has no .NET SDK — braces/namespaces checked by hand, patterns mirror Identity).
 
 ## Identity service
 
@@ -42,7 +42,8 @@ cd backend
 dotnet new sln -n RestaurantPos
 dotnet sln add src/Services/Identity/**/*.csproj \
                src/Services/Menu/**/*.csproj \
-               src/Services/Orders/**/*.csproj
+               src/Services/Orders/**/*.csproj \
+               src/Services/Inventory/**/*.csproj
 dotnet build
 
 # EF tooling (once):
@@ -56,12 +57,16 @@ dotnet ef migrations add InitialMenu --context MenuDbContext \
   --project src/Services/Menu/Menu.Infrastructure --startup-project $STARTUP
 dotnet ef migrations add InitialOrders --context OrdersDbContext \
   --project src/Services/Orders/Orders.Infrastructure --startup-project $STARTUP
+dotnet ef migrations add InitialInventory --context InventoryDbContext \
+  --project src/Services/Inventory/Inventory.Infrastructure --startup-project $STARTUP
 dotnet ef database update --context IdentityDbContext \
   --project src/Services/Identity/Identity.Infrastructure --startup-project $STARTUP
 dotnet ef database update --context MenuDbContext \
   --project src/Services/Menu/Menu.Infrastructure --startup-project $STARTUP
 dotnet ef database update --context OrdersDbContext \
   --project src/Services/Orders/Orders.Infrastructure --startup-project $STARTUP
+dotnet ef database update --context InventoryDbContext \
+  --project src/Services/Inventory/Inventory.Infrastructure --startup-project $STARTUP
 
 dotnet run --project src/Services/Identity/Identity.Api   # http://localhost:5080
 ```
@@ -91,6 +96,16 @@ Tenant-scoped, hosted at `/api/orders` (auth required; tenant from the JWT). Ord
 | `POST /api/orders/{id}/advance` | placed → preparing → ready → served |
 | `POST /api/orders/{id}/cancel` | Cancel an order |
 | `DELETE /api/orders/` | Clear the tenant's orders |
+
+### Inventory module
+
+Tenant-scoped stock keyed by product id, hosted at `/api/inventory`:
+
+| Method + path | Purpose |
+|---|---|
+| `GET /api/inventory/` | Tracked stock (productId → quantity) |
+| `PUT /api/inventory/{productId}` | Set a product's stock (upsert) |
+| `POST /api/inventory/decrement` | Draw down stock for a list of `{productId, quantity}` (untracked products ignored) |
 
 ## Intended structure
 
