@@ -17,7 +17,7 @@ frontend/
     ├── routes/                      ← LoginPage, PosPage, OrdersPage, KdsPage, TablesPage, MenuPage, ReportsPage
     ├── features/
     │   ├── auth/                    ← AuthContext (session + persistence), session validity
-    │   ├── menu/                    ← MenuStore (reducer, CRUD) + seed data; POS reads this
+    │   ├── menu/                    ← MenuStore: real API (full-stack) or localStorage (mock mode); POS reads this
     │   ├── cart/                    ← CartContext (reducer) + totals
     │   ├── coupons/                 ← coupon catalog + apply logic (drives the discount)
     │   ├── orders/                  ← OrdersStore (reducer) + status metadata

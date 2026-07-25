@@ -2,7 +2,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -33,18 +32,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(() => {
     const stored = loadJson<AuthSession | null>(STORAGE_KEY, null)
     // Drop an expired session on load.
-    return isSessionValid(stored, Date.now()) ? stored : null
+    const valid = isSessionValid(stored, Date.now()) ? stored : null
+    // Set the bearer token synchronously so requests fired by child providers
+    // on first render already carry it.
+    setAuthToken(valid?.accessToken ?? null)
+    return valid
   })
-
-  // Keep the HTTP client's bearer token in sync with the session (covers
-  // initial load from storage, login/register, and logout).
-  useEffect(() => {
-    setAuthToken(session?.accessToken ?? null)
-  }, [session])
 
   const apply = useCallback((next: AuthSession) => {
     setSession(next)
     persist(next)
+    setAuthToken(next.accessToken)
   }, [])
 
   const login = useCallback(
@@ -64,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     setSession(null)
     persist(null)
+    setAuthToken(null)
   }, [])
 
   const value = useMemo<AuthContextValue>(
