@@ -1,4 +1,5 @@
 import type { Order } from '../../types/domain'
+import { loyaltyPoints } from './loyalty'
 
 export interface CustomerRow {
   /** Grouping key: phone if present, else the lowercased name. */
@@ -7,6 +8,8 @@ export interface CustomerRow {
   phone?: string
   visits: number
   totalSpentMinor: number
+  /** Loyalty points earned from total spend. */
+  points: number
   lastOrderAt: string
 }
 
@@ -36,10 +39,13 @@ export function summarizeCustomers(orders: Order[]): CustomerRow[] {
         phone,
         visits: 1,
         totalSpentMinor: order.totalMinor,
+        points: 0, // filled in below once spend is fully accumulated
         lastOrderAt: order.placedAt,
       })
     }
   }
 
-  return [...byKey.values()].sort((a, b) => b.totalSpentMinor - a.totalSpentMinor)
+  return [...byKey.values()]
+    .map((row) => ({ ...row, points: loyaltyPoints(row.totalSpentMinor) }))
+    .sort((a, b) => b.totalSpentMinor - a.totalSpentMinor)
 }

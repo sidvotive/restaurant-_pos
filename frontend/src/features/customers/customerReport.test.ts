@@ -24,7 +24,7 @@ describe('summarizeCustomers', () => {
     expect(summarizeCustomers([order(1000, {})])).toEqual([])
   })
 
-  it('groups by phone, summing visits and spend', () => {
+  it('groups by phone, summing visits and spend and earning points', () => {
     const rows = summarizeCustomers([
       order(30000, { customerName: 'Asha', customerPhone: '99999' }, '2026-01-01T10:00:00.000Z'),
       order(20000, { customerName: 'Asha R', customerPhone: '99999' }, '2026-01-02T10:00:00.000Z'),
@@ -34,6 +34,7 @@ describe('summarizeCustomers', () => {
     expect(rows[0].totalSpentMinor).toBe(50000)
     expect(rows[0].phone).toBe('99999')
     expect(rows[0].lastOrderAt).toBe('2026-01-02T10:00:00.000Z')
+    expect(rows[0].points).toBe(50) // ₹500 spent → 50 points at 1/₹10
   })
 
   it('groups by name when no phone is given', () => {

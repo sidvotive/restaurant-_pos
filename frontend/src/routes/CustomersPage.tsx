@@ -36,7 +36,13 @@ export default function CustomersPage() {
                 <span className="text-xs text-slate-400">
                   {c.visits} visit{c.visits === 1 ? '' : 's'}
                 </span>
-                <span className="text-xs text-slate-500">
+                <span
+                  className="rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-medium text-amber-300"
+                  title="Loyalty points"
+                >
+                  {c.points} pts
+                </span>
+                <span className="hidden text-xs text-slate-500 sm:inline">
                   {DATE_FMT.format(new Date(c.lastOrderAt))}
                 </span>
                 <span className="w-24 text-right text-sm font-semibold text-amber-300">
