@@ -9,5 +9,7 @@
     <ProjectReference Include="..\Identity.Infrastructure\Identity.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Menu\Menu.Application\Menu.Application.csproj" />
     <ProjectReference Include="..\..\Menu\Menu.Infrastructure\Menu.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Orders\Orders.Application\Orders.Application.csproj" />
+    <ProjectReference Include="..\..\Orders\Orders.Infrastructure\Orders.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

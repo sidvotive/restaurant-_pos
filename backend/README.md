@@ -2,7 +2,7 @@
 
 .NET 9 Web API services following **Clean Architecture**, with **SignalR** for real-time features. Use cases are plain injectable services (no MediatR/CQRS for now — kept deliberately simple).
 
-> **Status:** modular-monolith API hosting the **Identity** module (auth: register / login / refresh) and the **Menu** module (tenant-scoped CRUD). The Identity build was verified locally; the **Menu** module was added afterward and its build/migrations should be verified locally (this environment has no .NET SDK — braces/namespaces checked by hand, patterns mirror Identity).
+> **Status:** modular-monolith API hosting the **Identity** (auth), **Menu** (tenant-scoped CRUD), and **Orders** (place/advance/cancel + line snapshots) modules. Identity's build was verified locally; the **Menu** and **Orders** modules were added afterward and should be built/migrated locally (this environment has no .NET SDK — braces/namespaces checked by hand, patterns mirror Identity).
 
 ## Identity service
 
@@ -40,7 +40,9 @@ backend/
 ```bash
 cd backend
 dotnet new sln -n RestaurantPos
-dotnet sln add src/Services/Identity/**/*.csproj src/Services/Menu/**/*.csproj
+dotnet sln add src/Services/Identity/**/*.csproj \
+               src/Services/Menu/**/*.csproj \
+               src/Services/Orders/**/*.csproj
 dotnet build
 
 # EF tooling (once):
@@ -52,15 +54,19 @@ dotnet ef migrations add InitialIdentity --context IdentityDbContext \
   --project src/Services/Identity/Identity.Infrastructure --startup-project $STARTUP
 dotnet ef migrations add InitialMenu --context MenuDbContext \
   --project src/Services/Menu/Menu.Infrastructure --startup-project $STARTUP
+dotnet ef migrations add InitialOrders --context OrdersDbContext \
+  --project src/Services/Orders/Orders.Infrastructure --startup-project $STARTUP
 dotnet ef database update --context IdentityDbContext \
   --project src/Services/Identity/Identity.Infrastructure --startup-project $STARTUP
 dotnet ef database update --context MenuDbContext \
   --project src/Services/Menu/Menu.Infrastructure --startup-project $STARTUP
+dotnet ef database update --context OrdersDbContext \
+  --project src/Services/Orders/Orders.Infrastructure --startup-project $STARTUP
 
 dotnet run --project src/Services/Identity/Identity.Api   # http://localhost:5080
 ```
 
-> **Modular monolith:** `Identity.Api` is the single host process; it composes both the **Identity** and **Menu** modules (own layers, own `DbContext`, same PostgreSQL database). Each module can later be split into its own service along these boundaries.
+> **Modular monolith:** `Identity.Api` is the single host process; it composes the **Identity**, **Menu**, and **Orders** modules (own layers, own `DbContext`, same PostgreSQL database). Each module can later be split into its own service along these boundaries.
 >
 > **Before any real use, replace the placeholder `Jwt:Secret`** in `appsettings.json` with a long random value supplied via configuration/secret store (it is dev-only). Once a `.sln` exists, CI builds and tests the backend automatically.
 
@@ -73,6 +79,18 @@ Tenant-scoped CRUD, hosted at `/api/menu` (all endpoints require auth; the tenan
 | `GET /api/menu/` | The tenant's categories + products |
 | `POST /api/menu/categories` · `PUT /…/{id}` · `DELETE /…/{id}` | Category CRUD (delete cascades products) |
 | `POST /api/menu/products` · `PUT /…/{id}` · `DELETE /…/{id}` | Product CRUD |
+
+### Orders module
+
+Tenant-scoped, hosted at `/api/orders` (auth required; tenant from the JWT). Orders store their line snapshots and the full bill breakdown (subtotal/discount/tax/tip/total):
+
+| Method + path | Purpose |
+|---|---|
+| `GET /api/orders/` | The tenant's orders (newest first) |
+| `POST /api/orders/` | Place an order (server assigns the number) |
+| `POST /api/orders/{id}/advance` | placed → preparing → ready → served |
+| `POST /api/orders/{id}/cancel` | Cancel an order |
+| `DELETE /api/orders/` | Clear the tenant's orders |
 
 ## Intended structure
 

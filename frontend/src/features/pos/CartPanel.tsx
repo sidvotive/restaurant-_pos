@@ -89,17 +89,23 @@ export default function CartPanel() {
     }
   }
 
-  function handleSend() {
+  async function handleSend() {
     if (itemCount === 0) return
-    const order = placeOrder({
-      lines,
-      orderType,
-      totals,
-      tableLabel: dineInTable?.label,
-      paymentMethod,
-      customerName,
-      customerPhone,
-    })
+    let order
+    try {
+      order = await placeOrder({
+        lines,
+        orderType,
+        totals,
+        tableLabel: dineInTable?.label,
+        paymentMethod,
+        customerName,
+        customerPhone,
+      })
+    } catch {
+      // Keep the cart intact; the HTTP layer already logged the failure.
+      return
+    }
     // Draw down tracked stock for the items sold.
     decrementForOrder(lines)
     // Seat the table and release the selection for the next order.

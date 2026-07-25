@@ -6,6 +6,8 @@ using Identity.Infrastructure;
 using Identity.Infrastructure.Security;
 using Menu.Application;
 using Menu.Infrastructure;
+using Orders.Application;
+using Orders.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -16,6 +18,8 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddMenuApplication();
 builder.Services.AddMenuInfrastructure(builder.Configuration);
+builder.Services.AddOrdersApplication();
+builder.Services.AddOrdersInfrastructure(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
 
 // JWT bearer authentication using the same signing key the tokens are issued with.
@@ -59,5 +63,7 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "iden
 app.MapAuthEndpoints();
 // Menu module (tenant-scoped CRUD).
 app.MapMenuEndpoints();
+// Orders module (tenant-scoped).
+app.MapOrderEndpoints();
 
 app.Run();

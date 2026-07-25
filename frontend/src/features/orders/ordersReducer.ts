@@ -5,6 +5,7 @@ export interface OrdersState {
 }
 
 export type OrdersAction =
+  | { type: 'load'; orders: Order[] }
   | { type: 'place'; order: Order }
   | { type: 'advance'; orderId: string }
   | { type: 'cancel'; orderId: string }
@@ -27,6 +28,8 @@ export function nextStatus(status: OrderStatus): OrderStatus {
 
 export function ordersReducer(state: OrdersState, action: OrdersAction): OrdersState {
   switch (action.type) {
+    case 'load':
+      return { orders: action.orders }
     case 'place':
       // Newest first.
       return { orders: [action.order, ...state.orders] }
