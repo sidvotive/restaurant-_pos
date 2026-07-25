@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { OrderType, PaymentMethod } from '../../types/domain'
 import { formatMinor, parseAmountToMinor } from '../../lib/money'
 import { lineTotalMinor } from '../cart/cartTotals'
+import { splitEvenly } from './splitBill'
 import { useCart } from '../cart/CartContext'
 import { useOrders } from '../orders/OrdersStore'
 import { useTables } from '../tables/TablesStore'
@@ -49,6 +50,7 @@ export default function CartPanel() {
   const [customerPhone, setCustomerPhone] = useState('')
   const [couponInput, setCouponInput] = useState('')
   const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [splitWays, setSplitWays] = useState(1)
 
   const dineInTable = orderType === 'dine-in' ? selectedTable : null
 
@@ -112,6 +114,7 @@ export default function CartPanel() {
     setCustomerPhone('')
     setCouponInput('')
     setCouponMsg(null)
+    setSplitWays(1)
   }
 
   function handleHold() {
@@ -128,6 +131,7 @@ export default function CartPanel() {
     clear()
     setCouponInput('')
     setCouponMsg(null)
+    setSplitWays(1)
   }
 
   return (
@@ -322,6 +326,36 @@ export default function CartPanel() {
             <dd>{formatMinor(totals.totalMinor)}</dd>
           </div>
         </dl>
+
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-xs text-slate-500">Split</span>
+          <button
+            type="button"
+            aria-label="Fewer ways"
+            onClick={() => setSplitWays((w) => Math.max(1, w - 1))}
+            className="h-7 w-7 rounded-md bg-slate-800 text-slate-200 hover:bg-slate-700"
+          >
+            −
+          </button>
+          <span className="w-6 text-center text-sm" aria-label="Split ways">
+            {splitWays}
+          </span>
+          <button
+            type="button"
+            aria-label="More ways"
+            onClick={() => setSplitWays((w) => Math.min(10, w + 1))}
+            className="h-7 w-7 rounded-md bg-slate-800 text-slate-200 hover:bg-slate-700"
+          >
+            +
+          </button>
+          {splitWays > 1 && (
+            <span className="ml-1 flex flex-wrap gap-x-2 text-xs text-slate-400">
+              {splitEvenly(totals.totalMinor, splitWays).map((share, i) => (
+                <span key={i}>{formatMinor(share)}</span>
+              ))}
+            </span>
+          )}
+        </div>
 
         <div className="mt-4 flex gap-2">
           <button
