@@ -59,6 +59,15 @@ export interface Order {
   customerPhone?: string
 }
 
+// A business expense (Finance module).
+export interface Expense {
+  id: string
+  label: string
+  amountMinor: number
+  /** ISO timestamp. */
+  at: string
+}
+
 // A parked bill that can be resumed later (POS hold/resume, issue #7).
 export interface HeldBill {
   id: string
