@@ -18,6 +18,7 @@ const navItems: NavItem[] = [
   { to: '/customers', label: 'Customers', icon: '👤' },
   { to: '/inventory', label: 'Inventory', icon: '📦' },
   { to: '/finance', label: 'Finance', icon: '💰' },
+  { to: '/staff', label: 'Staff', icon: '👥' },
 ]
 
 function SideNav() {

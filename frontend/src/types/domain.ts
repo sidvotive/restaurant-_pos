@@ -64,6 +64,21 @@ export interface Order {
   customerPhone?: string
 }
 
+// Employee management / attendance.
+export interface Employee {
+  id: string
+  name: string
+  role: string
+}
+
+export interface Shift {
+  id: string
+  employeeId: string
+  clockInAt: string
+  /** Absent while the employee is still clocked in. */
+  clockOutAt?: string
+}
+
 // A business expense (Finance module).
 export interface Expense {
   id: string
