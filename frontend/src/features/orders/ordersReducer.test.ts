@@ -66,4 +66,11 @@ describe('ordersReducer', () => {
     )
     expect(state.orders).toEqual([])
   })
+
+  it('cancels an order and blocks it from being advanced', () => {
+    let state = ordersReducer({ orders: [makeOrder('a', 1)] }, { type: 'cancel', orderId: 'a' })
+    expect(state.orders[0].status).toBe('cancelled')
+    state = ordersReducer(state, { type: 'advance', orderId: 'a' })
+    expect(state.orders[0].status).toBe('cancelled')
+  })
 })

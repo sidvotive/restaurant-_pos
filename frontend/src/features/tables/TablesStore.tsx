@@ -12,6 +12,7 @@ interface TablesContextValue {
   selectedTable: RestaurantTable | null
   select: (tableId: string | null) => void
   setStatus: (tableId: string, status: TableStatus) => void
+  reserve: (tableId: string, name: string) => void
 }
 
 const TablesContext = createContext<TablesContextValue | null>(null)
@@ -38,6 +39,7 @@ export function TablesProvider({ children }: { children: ReactNode }) {
       selectedTable,
       select: (tableId) => dispatch({ type: 'select', tableId }),
       setStatus: (tableId, status) => dispatch({ type: 'setStatus', tableId, status }),
+      reserve: (tableId, name) => dispatch({ type: 'reserve', tableId, name }),
     }
   }, [state])
 

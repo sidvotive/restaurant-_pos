@@ -9,9 +9,18 @@ import type { BillTotals, CartLine, OrderType, Product } from '../../types/domai
 import { computeTotals } from './cartTotals'
 import { cartReducer, initialCartState } from './cartReducer'
 
+interface CartLoad {
+  lines: CartLine[]
+  orderType: OrderType
+  discountMinor: number
+  tipMinor: number
+}
+
 interface CartContextValue {
   lines: CartLine[]
   orderType: OrderType
+  discountMinor: number
+  tipMinor: number
   totals: BillTotals
   itemCount: number
   add: (product: Product) => void
@@ -21,6 +30,7 @@ interface CartContextValue {
   setOrderType: (orderType: OrderType) => void
   setDiscount: (discountMinor: number) => void
   setTip: (tipMinor: number) => void
+  loadBill: (bill: CartLoad) => void
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
@@ -37,6 +47,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return {
       lines: state.lines,
       orderType: state.orderType,
+      discountMinor: state.discountMinor,
+      tipMinor: state.tipMinor,
       totals,
       itemCount,
       add: (product) => dispatch({ type: 'add', product }),
@@ -46,6 +58,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setOrderType: (orderType) => dispatch({ type: 'setOrderType', orderType }),
       setDiscount: (discountMinor) => dispatch({ type: 'setDiscount', discountMinor }),
       setTip: (tipMinor) => dispatch({ type: 'setTip', tipMinor }),
+      loadBill: (bill) =>
+        dispatch({
+          type: 'load',
+          state: {
+            lines: bill.lines,
+            orderType: bill.orderType,
+            discountMinor: bill.discountMinor,
+            tipMinor: bill.tipMinor,
+          },
+        }),
     }
   }, [state])
 

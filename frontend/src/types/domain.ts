@@ -4,6 +4,8 @@
 
 export type OrderType = 'dine-in' | 'takeaway' | 'delivery'
 
+export type PaymentMethod = 'cash' | 'card' | 'upi' | 'qr'
+
 export interface Category {
   id: string
   name: string
@@ -36,7 +38,7 @@ export interface BillTotals {
 
 // Kitchen/order lifecycle. The KDS advances placed → preparing → ready; the
 // floor marks ready orders served. Mirrors the Orders service contract (#6).
-export type OrderStatus = 'placed' | 'preparing' | 'ready' | 'served'
+export type OrderStatus = 'placed' | 'preparing' | 'ready' | 'served' | 'cancelled'
 
 export interface Order {
   id: string
@@ -45,11 +47,58 @@ export interface Order {
   type: OrderType
   lines: CartLine[]
   totalMinor: number
+  /** Bill breakdown at settlement. Optional for orders placed before this was captured. */
+  subtotalMinor?: number
+  discountMinor?: number
+  taxMinor?: number
+  tipMinor?: number
   status: OrderStatus
   /** ISO timestamp. */
   placedAt: string
   /** Dine-in table label, when the order is tied to a table. */
   tableLabel?: string
+  /** How the bill was settled. Optional for orders placed before this was captured. */
+  paymentMethod?: PaymentMethod
+  /** Optional customer attached to the order (CRM). */
+  customerName?: string
+  customerPhone?: string
+}
+
+// Employee management / attendance.
+export interface Employee {
+  id: string
+  name: string
+  role: string
+}
+
+export interface Shift {
+  id: string
+  employeeId: string
+  clockInAt: string
+  /** Absent while the employee is still clocked in. */
+  clockOutAt?: string
+}
+
+// A business expense (Finance module).
+export interface Expense {
+  id: string
+  label: string
+  amountMinor: number
+  /** ISO timestamp. */
+  at: string
+}
+
+// A parked bill that can be resumed later (POS hold/resume, issue #7).
+export interface HeldBill {
+  id: string
+  lines: CartLine[]
+  orderType: OrderType
+  discountMinor: number
+  tipMinor: number
+  tableId?: string
+  tableLabel?: string
+  /** ISO timestamp when the bill was held. */
+  heldAt: string
 }
 
 // Floor / table management (issue #5).
@@ -61,4 +110,6 @@ export interface RestaurantTable {
   area: string
   seats: number
   status: TableStatus
+  /** Guest name when the table is reserved. */
+  reservedFor?: string
 }

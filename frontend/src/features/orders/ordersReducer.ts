@@ -7,6 +7,7 @@ export interface OrdersState {
 export type OrdersAction =
   | { type: 'place'; order: Order }
   | { type: 'advance'; orderId: string }
+  | { type: 'cancel'; orderId: string }
   | { type: 'clear' }
 
 export const initialOrdersState: OrdersState = { orders: [] }
@@ -17,6 +18,7 @@ const NEXT_STATUS: Record<OrderStatus, OrderStatus> = {
   preparing: 'ready',
   ready: 'served',
   served: 'served',
+  cancelled: 'cancelled',
 }
 
 export function nextStatus(status: OrderStatus): OrderStatus {
@@ -31,7 +33,16 @@ export function ordersReducer(state: OrdersState, action: OrdersAction): OrdersS
     case 'advance':
       return {
         orders: state.orders.map((o) =>
-          o.id === action.orderId ? { ...o, status: nextStatus(o.status) } : o,
+          // A cancelled order cannot be advanced.
+          o.id === action.orderId && o.status !== 'cancelled'
+            ? { ...o, status: nextStatus(o.status) }
+            : o,
+        ),
+      }
+    case 'cancel':
+      return {
+        orders: state.orders.map((o) =>
+          o.id === action.orderId ? { ...o, status: 'cancelled' } : o,
         ),
       }
     case 'clear':

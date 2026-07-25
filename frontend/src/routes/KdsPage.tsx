@@ -48,8 +48,8 @@ function Ticket({ order, onAdvance }: { order: Order; onAdvance: (id: string) =>
 
 export default function KdsPage() {
   const { orders, advance } = useOrders()
-  // The kitchen board shows active tickets only (not yet served).
-  const active = orders.filter((o) => o.status !== 'served')
+  // The kitchen board shows active tickets only (not served or cancelled).
+  const active = orders.filter((o) => o.status !== 'served' && o.status !== 'cancelled')
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">

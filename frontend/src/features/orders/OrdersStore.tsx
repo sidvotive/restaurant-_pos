@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNode } from 'react'
-import type { CartLine, Order, OrderType } from '../../types/domain'
+import type { BillTotals, CartLine, Order, OrderType, PaymentMethod } from '../../types/domain'
 import { loadJson, saveJson } from '../../lib/persist'
 import { ordersReducer, initialOrdersState, type OrdersState } from './ordersReducer'
 
@@ -8,14 +8,18 @@ const STORAGE_KEY = 'rpos.orders'
 interface PlaceOrderInput {
   lines: CartLine[]
   orderType: OrderType
-  totalMinor: number
+  totals: BillTotals
   tableLabel?: string
+  paymentMethod: PaymentMethod
+  customerName?: string
+  customerPhone?: string
 }
 
 interface OrdersContextValue {
   orders: Order[]
   placeOrder: (input: PlaceOrderInput) => Order
   advance: (orderId: string) => void
+  cancel: (orderId: string) => void
   clearAll: () => void
 }
 
@@ -48,21 +52,37 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
   const value = useMemo<OrdersContextValue>(
     () => ({
       orders: state.orders,
-      placeOrder: ({ lines, orderType, totalMinor, tableLabel }) => {
+      placeOrder: ({
+        lines,
+        orderType,
+        totals,
+        tableLabel,
+        paymentMethod,
+        customerName,
+        customerPhone,
+      }) => {
         const order: Order = {
           id: newId(),
           number: nextNumber(state.orders),
           type: orderType,
           lines,
-          totalMinor,
+          totalMinor: totals.totalMinor,
+          subtotalMinor: totals.subtotalMinor,
+          discountMinor: totals.discountMinor,
+          taxMinor: totals.taxMinor,
+          tipMinor: totals.tipMinor,
           status: 'placed',
           placedAt: new Date().toISOString(),
           tableLabel,
+          paymentMethod,
+          customerName: customerName?.trim() || undefined,
+          customerPhone: customerPhone?.trim() || undefined,
         }
         dispatch({ type: 'place', order })
         return order
       },
       advance: (orderId) => dispatch({ type: 'advance', orderId }),
+      cancel: (orderId) => dispatch({ type: 'cancel', orderId }),
       clearAll: () => dispatch({ type: 'clear' }),
     }),
     [state],

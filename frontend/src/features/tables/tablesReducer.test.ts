@@ -47,6 +47,23 @@ describe('tablesReducer', () => {
     state = tablesReducer(state, { type: 'setStatus', tableId: 't3', status: 'occupied' })
     expect(state.selectedTableId).toBe('t1')
   })
+
+  it('reserves a table with a guest name and deselects it', () => {
+    let state = tablesReducer(baseState(), { type: 'select', tableId: 't1' })
+    state = tablesReducer(state, { type: 'reserve', tableId: 't1', name: '  Asha  ' })
+    const t1 = state.tables.find((t) => t.id === 't1')
+    expect(t1?.status).toBe('reserved')
+    expect(t1?.reservedFor).toBe('Asha')
+    expect(state.selectedTableId).toBeNull()
+  })
+
+  it('clears the reservation name when the table is freed', () => {
+    let state = tablesReducer(baseState(), { type: 'reserve', tableId: 't1', name: 'Asha' })
+    state = tablesReducer(state, { type: 'setStatus', tableId: 't1', status: 'free' })
+    const t1 = state.tables.find((t) => t.id === 't1')
+    expect(t1?.status).toBe('free')
+    expect(t1?.reservedFor).toBeUndefined()
+  })
 })
 
 describe('groupByArea', () => {

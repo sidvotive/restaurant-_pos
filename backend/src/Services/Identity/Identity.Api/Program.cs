@@ -2,10 +2,8 @@ using System.Text;
 using Identity.Api.Endpoints;
 using Identity.Api.Middleware;
 using Identity.Application;
-using Identity.Application.Common;
 using Identity.Infrastructure;
 using Identity.Infrastructure.Security;
-using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -44,13 +42,6 @@ app.UseAuthorization();
 
 // Liveness probe.
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "identity" }));
-
-// Demonstrates the CQRS/MediatR pipeline.
-app.MapGet("/ping", async (IMediator mediator) =>
-{
-    var result = await mediator.Send(new PingQuery("identity"));
-    return Results.Ok(new { message = result });
-});
 
 // Auth: register / login / refresh.
 app.MapAuthEndpoints();

@@ -8,6 +8,7 @@ export interface TablesState {
 export type TablesAction =
   | { type: 'select'; tableId: string | null }
   | { type: 'setStatus'; tableId: string; status: TableStatus }
+  | { type: 'reserve'; tableId: string; name: string }
 
 export function tablesReducer(state: TablesState, action: TablesAction): TablesState {
   switch (action.type) {
@@ -15,13 +16,27 @@ export function tablesReducer(state: TablesState, action: TablesAction): TablesS
       return { ...state, selectedTableId: action.tableId }
     case 'setStatus': {
       const tables = state.tables.map((t) =>
-        t.id === action.tableId ? { ...t, status: action.status } : t,
+        t.id === action.tableId
+          ? // Clear any reservation once the table is no longer reserved.
+            { ...t, status: action.status, reservedFor: action.status === 'reserved' ? t.reservedFor : undefined }
+          : t,
       )
       // Deselect a table once it is no longer free.
       const selectedTableId =
         action.tableId === state.selectedTableId && action.status !== 'free'
           ? null
           : state.selectedTableId
+      return { tables, selectedTableId }
+    }
+    case 'reserve': {
+      const name = action.name.trim()
+      const tables = state.tables.map((t) =>
+        t.id === action.tableId
+          ? { ...t, status: 'reserved' as const, reservedFor: name || undefined }
+          : t,
+      )
+      const selectedTableId =
+        action.tableId === state.selectedTableId ? null : state.selectedTableId
       return { tables, selectedTableId }
     }
     default:

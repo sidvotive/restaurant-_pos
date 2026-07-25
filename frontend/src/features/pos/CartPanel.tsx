@@ -1,10 +1,14 @@
-import { useState } from 'react'
-import type { OrderType } from '../../types/domain'
+import { useEffect, useState } from 'react'
+import type { OrderType, PaymentMethod } from '../../types/domain'
 import { formatMinor, parseAmountToMinor } from '../../lib/money'
 import { lineTotalMinor } from '../cart/cartTotals'
+import { splitEvenly } from './splitBill'
 import { useCart } from '../cart/CartContext'
 import { useOrders } from '../orders/OrdersStore'
 import { useTables } from '../tables/TablesStore'
+import { useHeldBills } from '../held/HeldBillsStore'
+import { useInventory } from '../inventory/InventoryStore'
+import { applyCoupon } from '../coupons/coupons'
 
 const ORDER_TYPES: { value: OrderType; label: string }[] = [
   { value: 'dine-in', label: 'Dine-in' },
@@ -12,16 +16,58 @@ const ORDER_TYPES: { value: OrderType; label: string }[] = [
   { value: 'delivery', label: 'Delivery' },
 ]
 
+const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
+  { value: 'cash', label: 'Cash' },
+  { value: 'card', label: 'Card' },
+  { value: 'upi', label: 'UPI' },
+  { value: 'qr', label: 'QR' },
+]
+
 export default function CartPanel() {
-  const { lines, totals, orderType, itemCount, add, decrement, clear, setOrderType, setDiscount, setTip } =
-    useCart()
+  const {
+    lines,
+    totals,
+    orderType,
+    itemCount,
+    discountMinor,
+    tipMinor,
+    add,
+    decrement,
+    clear,
+    setOrderType,
+    setDiscount,
+    setTip,
+  } = useCart()
   const { placeOrder } = useOrders()
   const { selectedTable, select, setStatus } = useTables()
+  const { hold } = useHeldBills()
+  const { decrementForOrder } = useInventory()
   const [lastSent, setLastSent] = useState<number | null>(null)
   const [discountInput, setDiscountInput] = useState('')
   const [tipInput, setTipInput] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
+  const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
+  const [couponInput, setCouponInput] = useState('')
+  const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [splitWays, setSplitWays] = useState(1)
 
   const dineInTable = orderType === 'dine-in' ? selectedTable : null
+
+  // Keep the inputs in sync when discount/tip change from outside typing
+  // (e.g. resuming a held bill, or Clear/Send resetting the cart).
+  useEffect(() => {
+    if ((parseAmountToMinor(discountInput) ?? 0) !== discountMinor) {
+      setDiscountInput(discountMinor ? (discountMinor / 100).toString() : '')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discountMinor])
+  useEffect(() => {
+    if ((parseAmountToMinor(tipInput) ?? 0) !== tipMinor) {
+      setTipInput(tipMinor ? (tipMinor / 100).toString() : '')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tipMinor])
 
   function handleDiscountChange(value: string) {
     setDiscountInput(value)
@@ -33,14 +79,29 @@ export default function CartPanel() {
     setTip(parseAmountToMinor(value) ?? 0)
   }
 
+  function handleApplyCoupon() {
+    const result = applyCoupon(couponInput, totals.subtotalMinor)
+    if (result.ok) {
+      setDiscount(result.discountMinor)
+      setCouponMsg({ ok: true, text: `${couponInput.trim().toUpperCase()} — ${result.label}` })
+    } else {
+      setCouponMsg({ ok: false, text: result.error })
+    }
+  }
+
   function handleSend() {
     if (itemCount === 0) return
     const order = placeOrder({
       lines,
       orderType,
-      totalMinor: totals.totalMinor,
+      totals,
       tableLabel: dineInTable?.label,
+      paymentMethod,
+      customerName,
+      customerPhone,
     })
+    // Draw down tracked stock for the items sold.
+    decrementForOrder(lines)
     // Seat the table and release the selection for the next order.
     if (dineInTable) {
       setStatus(dineInTable.id, 'occupied')
@@ -48,8 +109,29 @@ export default function CartPanel() {
     }
     setLastSent(order.number)
     clear()
-    setDiscountInput('')
-    setTipInput('')
+    setPaymentMethod('cash')
+    setCustomerName('')
+    setCustomerPhone('')
+    setCouponInput('')
+    setCouponMsg(null)
+    setSplitWays(1)
+  }
+
+  function handleHold() {
+    if (itemCount === 0) return
+    hold({
+      lines,
+      orderType,
+      discountMinor,
+      tipMinor,
+      tableId: dineInTable?.id,
+      tableLabel: dineInTable?.label,
+    })
+    if (dineInTable) select(null)
+    clear()
+    setCouponInput('')
+    setCouponMsg(null)
+    setSplitWays(1)
   }
 
   return (
@@ -131,6 +213,69 @@ export default function CartPanel() {
 
       <div className="border-t border-slate-800 p-4">
         <div className="mb-3 flex gap-2">
+          <input
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+            placeholder="Customer name (optional)"
+            aria-label="Customer name"
+            className="min-w-0 flex-1 rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm outline-none focus:border-amber-500"
+          />
+          <input
+            value={customerPhone}
+            onChange={(e) => setCustomerPhone(e.target.value)}
+            placeholder="Phone"
+            aria-label="Customer phone"
+            inputMode="tel"
+            className="w-28 rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm outline-none focus:border-amber-500"
+          />
+        </div>
+
+        <div className="mb-3">
+          <span className="text-[11px] text-slate-500">Payment</span>
+          <div className="mt-1 flex gap-2">
+            {PAYMENT_METHODS.map((pm) => (
+              <button
+                key={pm.value}
+                type="button"
+                onClick={() => setPaymentMethod(pm.value)}
+                className={[
+                  'flex-1 rounded-lg px-2 py-2 text-xs font-semibold transition-colors',
+                  pm.value === paymentMethod
+                    ? 'bg-amber-500 text-slate-950'
+                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700',
+                ].join(' ')}
+              >
+                {pm.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-3">
+          <div className="flex gap-2">
+            <input
+              value={couponInput}
+              onChange={(e) => setCouponInput(e.target.value)}
+              placeholder="Coupon code"
+              aria-label="Coupon code"
+              className="min-w-0 flex-1 rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm uppercase outline-none focus:border-amber-500"
+            />
+            <button
+              type="button"
+              onClick={handleApplyCoupon}
+              className="rounded-lg bg-slate-800 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-slate-700"
+            >
+              Apply
+            </button>
+          </div>
+          {couponMsg && (
+            <p className={`mt-1 text-[11px] ${couponMsg.ok ? 'text-emerald-400' : 'text-rose-400'}`}>
+              {couponMsg.text}
+            </p>
+          )}
+        </div>
+
+        <div className="mb-3 flex gap-2">
           <label className="flex-1">
             <span className="text-[11px] text-slate-500">Discount (₹)</span>
             <input
@@ -182,14 +327,52 @@ export default function CartPanel() {
           </div>
         </dl>
 
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-xs text-slate-500">Split</span>
+          <button
+            type="button"
+            aria-label="Fewer ways"
+            onClick={() => setSplitWays((w) => Math.max(1, w - 1))}
+            className="h-7 w-7 rounded-md bg-slate-800 text-slate-200 hover:bg-slate-700"
+          >
+            −
+          </button>
+          <span className="w-6 text-center text-sm" aria-label="Split ways">
+            {splitWays}
+          </span>
+          <button
+            type="button"
+            aria-label="More ways"
+            onClick={() => setSplitWays((w) => Math.min(10, w + 1))}
+            className="h-7 w-7 rounded-md bg-slate-800 text-slate-200 hover:bg-slate-700"
+          >
+            +
+          </button>
+          {splitWays > 1 && (
+            <span className="ml-1 flex flex-wrap gap-x-2 text-xs text-slate-400">
+              {splitEvenly(totals.totalMinor, splitWays).map((share, i) => (
+                <span key={i}>{formatMinor(share)}</span>
+              ))}
+            </span>
+          )}
+        </div>
+
         <div className="mt-4 flex gap-2">
           <button
             type="button"
             onClick={clear}
             disabled={itemCount === 0}
-            className="rounded-xl bg-slate-800 px-4 py-3 text-sm font-medium text-slate-300 disabled:opacity-40 hover:bg-slate-700"
+            className="rounded-xl bg-slate-800 px-3 py-3 text-sm font-medium text-slate-300 disabled:opacity-40 hover:bg-slate-700"
           >
             Clear
+          </button>
+          <button
+            type="button"
+            onClick={handleHold}
+            disabled={itemCount === 0}
+            className="rounded-xl bg-slate-800 px-3 py-3 text-sm font-medium text-slate-300 disabled:opacity-40 hover:bg-slate-700"
+          >
+            Hold
           </button>
           <button
             type="button"
@@ -197,7 +380,7 @@ export default function CartPanel() {
             disabled={itemCount === 0}
             className="flex-1 rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-40 hover:bg-amber-400"
           >
-            Send to Kitchen · {formatMinor(totals.totalMinor)}
+            Send · {formatMinor(totals.totalMinor)}
           </button>
         </div>
         {lastSent !== null && (

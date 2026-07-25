@@ -82,4 +82,15 @@ describe('cartReducer', () => {
     expect(state.tipMinor).toBe(0)
     expect(state.orderType).toBe('takeaway')
   })
+
+  it('load replaces the entire cart state (resuming a held bill)', () => {
+    const loaded = {
+      lines: [{ product: paneer, quantity: 3 }],
+      orderType: 'takeaway' as const,
+      discountMinor: 1000,
+      tipMinor: 500,
+    }
+    const state = cartReducer(initialCartState, { type: 'load', state: loaded })
+    expect(state).toEqual(loaded)
+  })
 })
