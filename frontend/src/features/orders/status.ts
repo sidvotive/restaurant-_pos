@@ -29,4 +29,9 @@ export const STATUS_META: Record<OrderStatus, StatusMeta> = {
     badge: 'bg-slate-600/30 text-slate-300',
     advanceLabel: '',
   },
+  cancelled: {
+    label: 'Cancelled',
+    badge: 'bg-rose-500/20 text-rose-300',
+    advanceLabel: '',
+  },
 }

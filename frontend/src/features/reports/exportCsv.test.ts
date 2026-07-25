@@ -21,14 +21,16 @@ describe('ordersToCsv', () => {
   it('starts with the header row', () => {
     const csv = ordersToCsv([])
     expect(csv.split('\n')[0]).toBe(
-      'Order,Placed At,Type,Table,Payment,Customer,Subtotal,Discount,Tax,Tip,Total',
+      'Order,Placed At,Type,Status,Table,Payment,Customer,Subtotal,Discount,Tax,Tip,Total',
     )
   })
 
   it('formats amounts as major units with two decimals', () => {
     const csv = ordersToCsv([baseOrder({ paymentMethod: 'upi', tableLabel: 'T1' })])
     const row = csv.split('\n')[1]
-    expect(row).toBe('1,2026-01-01T10:00:00.000Z,dine-in,T1,upi,,280.00,0.00,14.00,0.00,294.00')
+    expect(row).toBe(
+      '1,2026-01-01T10:00:00.000Z,dine-in,placed,T1,upi,,280.00,0.00,14.00,0.00,294.00',
+    )
   })
 
   it('quotes fields containing commas', () => {

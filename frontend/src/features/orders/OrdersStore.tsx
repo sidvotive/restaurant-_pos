@@ -19,6 +19,7 @@ interface OrdersContextValue {
   orders: Order[]
   placeOrder: (input: PlaceOrderInput) => Order
   advance: (orderId: string) => void
+  cancel: (orderId: string) => void
   clearAll: () => void
 }
 
@@ -81,6 +82,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
         return order
       },
       advance: (orderId) => dispatch({ type: 'advance', orderId }),
+      cancel: (orderId) => dispatch({ type: 'cancel', orderId }),
       clearAll: () => dispatch({ type: 'clear' }),
     }),
     [state],

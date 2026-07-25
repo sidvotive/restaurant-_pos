@@ -36,6 +36,16 @@ describe('summarizeSales', () => {
     })
   })
 
+  it('excludes cancelled orders from sales', () => {
+    const orders = [
+      order('dine-in', 30000),
+      { ...order('takeaway', 10000), status: 'cancelled' as const },
+    ]
+    const s = summarizeSales(orders)
+    expect(s.orderCount).toBe(1)
+    expect(s.totalSalesMinor).toBe(30000)
+  })
+
   it('sums tax collected and discounts given from the order breakdown', () => {
     const orders = [
       { ...order('dine-in', 30000), taxMinor: 1400, discountMinor: 1000 },

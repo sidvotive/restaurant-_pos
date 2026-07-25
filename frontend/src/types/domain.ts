@@ -38,7 +38,7 @@ export interface BillTotals {
 
 // Kitchen/order lifecycle. The KDS advances placed → preparing → ready; the
 // floor marks ready orders served. Mirrors the Orders service contract (#6).
-export type OrderStatus = 'placed' | 'preparing' | 'ready' | 'served'
+export type OrderStatus = 'placed' | 'preparing' | 'ready' | 'served' | 'cancelled'
 
 export interface Order {
   id: string

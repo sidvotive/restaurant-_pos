@@ -5,7 +5,7 @@ import { STATUS_META } from '../features/orders/status'
 const TIME_FMT = new Intl.DateTimeFormat('en-IN', { hour: '2-digit', minute: '2-digit' })
 
 export default function OrdersPage() {
-  const { orders, clearAll } = useOrders()
+  const { orders, clearAll, cancel } = useOrders()
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -61,6 +61,15 @@ export default function OrdersPage() {
                   <span className="w-24 text-right text-sm font-semibold">
                     {formatMinor(order.totalMinor)}
                   </span>
+                  {order.status !== 'served' && order.status !== 'cancelled' && (
+                    <button
+                      type="button"
+                      onClick={() => cancel(order.id)}
+                      className="rounded-md bg-slate-800 px-2 py-1 text-xs text-slate-400 hover:bg-slate-700 hover:text-rose-300"
+                    >
+                      Cancel
+                    </button>
+                  )}
                 </li>
               )
             })}

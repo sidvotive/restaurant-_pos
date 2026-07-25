@@ -21,6 +21,7 @@ export function summarizeCustomers(orders: Order[]): CustomerRow[] {
   const byKey = new Map<string, CustomerRow>()
 
   for (const order of orders) {
+    if (order.status === 'cancelled') continue // cancelled orders don't count
     const name = order.customerName?.trim()
     const phone = order.customerPhone?.trim()
     if (!name && !phone) continue

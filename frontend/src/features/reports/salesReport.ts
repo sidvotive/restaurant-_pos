@@ -33,7 +33,13 @@ export interface PaymentBreakdownRow {
 const ORDER_TYPES: OrderType[] = ['dine-in', 'takeaway', 'delivery']
 const PAYMENT_METHODS: PaymentMethod[] = ['cash', 'card', 'upi', 'qr']
 
-export function summarizeSales(orders: Order[]): SalesSummary {
+/** Cancelled orders never count towards sales. */
+function billable(orders: Order[]): Order[] {
+  return orders.filter((o) => o.status !== 'cancelled')
+}
+
+export function summarizeSales(all: Order[]): SalesSummary {
+  const orders = billable(all)
   const orderCount = orders.length
   const totalSalesMinor = orders.reduce((sum, o) => sum + o.totalMinor, 0)
   const itemCount = orders.reduce(
@@ -52,7 +58,8 @@ export function summarizeSales(orders: Order[]): SalesSummary {
 }
 
 /** Sales grouped by order type, always in a fixed order and including zeros. */
-export function salesByType(orders: Order[]): TypeBreakdownRow[] {
+export function salesByType(all: Order[]): TypeBreakdownRow[] {
+  const orders = billable(all)
   return ORDER_TYPES.map((type) => {
     const forType = orders.filter((o) => o.type === type)
     return {
@@ -65,7 +72,8 @@ export function salesByType(orders: Order[]): TypeBreakdownRow[] {
 
 /** Sales grouped by payment method (fixed order, includes zeros). Orders
  *  placed before payment capture default to cash. */
-export function salesByPayment(orders: Order[]): PaymentBreakdownRow[] {
+export function salesByPayment(all: Order[]): PaymentBreakdownRow[] {
+  const orders = billable(all)
   return PAYMENT_METHODS.map((method) => {
     const forMethod = orders.filter((o) => (o.paymentMethod ?? 'cash') === method)
     return {
@@ -77,7 +85,8 @@ export function salesByPayment(orders: Order[]): PaymentBreakdownRow[] {
 }
 
 /** Best-selling menu items by quantity, then by revenue. */
-export function topItems(orders: Order[], limit = 5): TopItemRow[] {
+export function topItems(all: Order[], limit = 5): TopItemRow[] {
+  const orders = billable(all)
   const byName = new Map<string, TopItemRow>()
   for (const order of orders) {
     for (const line of order.lines) {
