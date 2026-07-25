@@ -110,4 +110,6 @@ export interface RestaurantTable {
   area: string
   seats: number
   status: TableStatus
+  /** Guest name when the table is reserved. */
+  reservedFor?: string
 }

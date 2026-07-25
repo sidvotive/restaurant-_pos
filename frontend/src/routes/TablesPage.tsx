@@ -1,3 +1,4 @@
+import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { RestaurantTable, TableStatus } from '../types/domain'
 import { useTables } from '../features/tables/TablesStore'
@@ -39,6 +40,9 @@ function TableCard({
         <span className="text-xs text-slate-400">{table.seats} seats</span>
       </button>
       <span className="mt-2 text-xs font-medium capitalize">{table.status}</span>
+      {table.reservedFor && (
+        <span className="text-xs text-slate-400">for {table.reservedFor}</span>
+      )}
       {table.status !== 'free' && (
         <button
           type="button"
@@ -53,13 +57,24 @@ function TableCard({
 }
 
 export default function TablesPage() {
-  const { tables, selectedTableId, select, setStatus } = useTables()
+  const { tables, selectedTableId, select, setStatus, reserve } = useTables()
   const navigate = useNavigate()
   const summary = summarize(tables)
+  const freeTables = tables.filter((t) => t.status === 'free')
+  const [reserveTableId, setReserveTableId] = useState('')
+  const [reserveName, setReserveName] = useState('')
 
   function handleSelect(table: RestaurantTable) {
     select(table.id)
     navigate('/') // take the waiter to the POS to build the order
+  }
+
+  function handleReserve(e: FormEvent) {
+    e.preventDefault()
+    if (!reserveTableId) return
+    reserve(reserveTableId, reserveName)
+    setReserveTableId('')
+    setReserveName('')
   }
 
   return (
@@ -72,6 +87,40 @@ export default function TablesPage() {
           <span><span className="text-sky-300">{summary.reserved}</span> reserved</span>
         </div>
       </header>
+
+      <form
+        onSubmit={handleReserve}
+        className="flex flex-wrap items-center gap-2 border-b border-slate-800 px-6 py-3"
+      >
+        <span className="text-xs uppercase tracking-wide text-slate-500">Reserve</span>
+        <select
+          value={reserveTableId}
+          onChange={(e) => setReserveTableId(e.target.value)}
+          aria-label="Table to reserve"
+          className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-200 outline-none focus:border-amber-500"
+        >
+          <option value="">Select table…</option>
+          {freeTables.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.label} ({t.area})
+            </option>
+          ))}
+        </select>
+        <input
+          value={reserveName}
+          onChange={(e) => setReserveName(e.target.value)}
+          placeholder="Guest name"
+          aria-label="Reservation name"
+          className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm outline-none focus:border-amber-500"
+        />
+        <button
+          type="submit"
+          disabled={!reserveTableId}
+          className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-40 hover:bg-amber-400"
+        >
+          Reserve
+        </button>
+      </form>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-6">
         {groupByArea(tables).map((group) => (
