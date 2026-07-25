@@ -14,6 +14,7 @@ const navItems: NavItem[] = [
   { to: '/kds', label: 'Kitchen', icon: '👨‍🍳' },
   { to: '/tables', label: 'Tables', icon: '🍽️' },
   { to: '/menu', label: 'Menu', icon: '📖' },
+  { to: '/reports', label: 'Reports', icon: '📊' },
 ]
 
 function SideNav() {

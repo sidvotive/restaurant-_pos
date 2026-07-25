@@ -6,6 +6,7 @@ import OrdersPage from './routes/OrdersPage'
 import KdsPage from './routes/KdsPage'
 import TablesPage from './routes/TablesPage'
 import MenuPage from './routes/MenuPage'
+import ReportsPage from './routes/ReportsPage'
 import LoginPage from './routes/LoginPage'
 import { AuthProvider } from './features/auth/AuthContext'
 import { OrdersProvider } from './features/orders/OrdersStore'
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
           { path: 'kds', element: <KdsPage /> },
           { path: 'tables', element: <TablesPage /> },
           { path: 'menu', element: <MenuPage /> },
+          { path: 'reports', element: <ReportsPage /> },
         ],
       },
     ],
