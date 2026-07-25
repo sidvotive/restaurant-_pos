@@ -7,6 +7,7 @@ import {
   summarizeSales,
   topItems,
 } from '../features/reports/salesReport'
+import { ordersToCsv } from '../features/reports/exportCsv'
 
 const TYPE_LABEL: Record<OrderType, string> = {
   'dine-in': 'Dine-in',
@@ -72,10 +73,30 @@ export default function ReportsPage() {
   const byPayment = salesByPayment(orders)
   const top = topItems(orders, 5)
 
+  function handleExport() {
+    const csv = ordersToCsv(orders)
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `sales-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="border-b border-slate-800 px-6 py-4">
+      <header className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
         <h1 className="text-lg font-semibold">Reports</h1>
+        {orders.length > 0 && (
+          <button
+            type="button"
+            onClick={handleExport}
+            className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-700"
+          >
+            Export CSV
+          </button>
+        )}
       </header>
 
       {orders.length === 0 ? (
