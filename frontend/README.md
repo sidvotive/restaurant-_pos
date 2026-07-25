@@ -57,7 +57,8 @@ money math and cart state:
 - `src/features/coupons/coupons.test.ts` — percent/flat coupons, clamp, invalid/empty guards
 - `src/features/pos/splitBill.test.ts` — even split, remainder spread, sums to total, guards
 - `src/features/cart/cartReducer.test.ts` — add/increment/decrement/remove/clear, immutability
-- `src/features/orders/ordersReducer.test.ts` — place, status progression, advance targeting, clear
+- `src/features/orders/ordersReducer.test.ts` — place, status progression, advance targeting, clear, cancel
+- `src/features/orders/filterOrders.test.ts` — status filters, search by number/customer/table
 - `src/features/held/heldBillsReducer.test.ts` — hold ordering, remove, unknown-id no-op
 - `src/features/reports/salesReport.test.ts` — sales summary, by-type/by-payment grouping, top-item ranking
 - `src/features/reports/exportCsv.test.ts` — CSV header, amount formatting, comma quoting
