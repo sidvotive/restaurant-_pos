@@ -15,6 +15,7 @@ const navItems: NavItem[] = [
   { to: '/tables', label: 'Tables', icon: '🍽️' },
   { to: '/menu', label: 'Menu', icon: '📖' },
   { to: '/reports', label: 'Reports', icon: '📊' },
+  { to: '/customers', label: 'Customers', icon: '👤' },
 ]
 
 function SideNav() {
@@ -46,9 +47,10 @@ function SideNav() {
 
 /** Bottom tab bar shown on small screens where the sidebar is hidden. */
 function BottomNav({ onSignOut }: { onSignOut: () => void }) {
-  const itemClass = 'flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium'
+  const itemClass =
+    'flex min-w-[64px] flex-1 shrink-0 flex-col items-center gap-0.5 py-2 text-[11px] font-medium'
   return (
-    <nav className="flex border-t border-slate-800 bg-slate-900/80 sm:hidden">
+    <nav className="flex overflow-x-auto border-t border-slate-800 bg-slate-900/80 sm:hidden">
       {navItems.map((item) => (
         <NavLink
           key={item.to}
@@ -64,7 +66,11 @@ function BottomNav({ onSignOut }: { onSignOut: () => void }) {
           <span>{item.label}</span>
         </NavLink>
       ))}
-      <button type="button" onClick={onSignOut} className={`${itemClass} text-slate-400`}>
+      <button
+        type="button"
+        onClick={onSignOut}
+        className={`${itemClass} text-slate-400`}
+      >
         <span className="text-lg" aria-hidden>
           ⏻
         </span>

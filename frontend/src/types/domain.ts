@@ -54,6 +54,9 @@ export interface Order {
   tableLabel?: string
   /** How the bill was settled. Optional for orders placed before this was captured. */
   paymentMethod?: PaymentMethod
+  /** Optional customer attached to the order (CRM). */
+  customerName?: string
+  customerPhone?: string
 }
 
 // A parked bill that can be resumed later (POS hold/resume, issue #7).

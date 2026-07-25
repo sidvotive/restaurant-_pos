@@ -7,6 +7,7 @@ import KdsPage from './routes/KdsPage'
 import TablesPage from './routes/TablesPage'
 import MenuPage from './routes/MenuPage'
 import ReportsPage from './routes/ReportsPage'
+import CustomersPage from './routes/CustomersPage'
 import LoginPage from './routes/LoginPage'
 import { AuthProvider } from './features/auth/AuthContext'
 import { OrdersProvider } from './features/orders/OrdersStore'
@@ -29,6 +30,7 @@ const router = createBrowserRouter([
           { path: 'tables', element: <TablesPage /> },
           { path: 'menu', element: <MenuPage /> },
           { path: 'reports', element: <ReportsPage /> },
+          { path: 'customers', element: <CustomersPage /> },
         ],
       },
     ],

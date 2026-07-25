@@ -11,6 +11,8 @@ interface PlaceOrderInput {
   totalMinor: number
   tableLabel?: string
   paymentMethod: PaymentMethod
+  customerName?: string
+  customerPhone?: string
 }
 
 interface OrdersContextValue {
@@ -49,7 +51,15 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
   const value = useMemo<OrdersContextValue>(
     () => ({
       orders: state.orders,
-      placeOrder: ({ lines, orderType, totalMinor, tableLabel, paymentMethod }) => {
+      placeOrder: ({
+        lines,
+        orderType,
+        totalMinor,
+        tableLabel,
+        paymentMethod,
+        customerName,
+        customerPhone,
+      }) => {
         const order: Order = {
           id: newId(),
           number: nextNumber(state.orders),
@@ -60,6 +70,8 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
           placedAt: new Date().toISOString(),
           tableLabel,
           paymentMethod,
+          customerName: customerName?.trim() || undefined,
+          customerPhone: customerPhone?.trim() || undefined,
         }
         dispatch({ type: 'place', order })
         return order

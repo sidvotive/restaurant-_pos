@@ -42,6 +42,8 @@ export default function CartPanel() {
   const [discountInput, setDiscountInput] = useState('')
   const [tipInput, setTipInput] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
+  const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
 
   const dineInTable = orderType === 'dine-in' ? selectedTable : null
 
@@ -78,6 +80,8 @@ export default function CartPanel() {
       totalMinor: totals.totalMinor,
       tableLabel: dineInTable?.label,
       paymentMethod,
+      customerName,
+      customerPhone,
     })
     // Seat the table and release the selection for the next order.
     if (dineInTable) {
@@ -87,6 +91,8 @@ export default function CartPanel() {
     setLastSent(order.number)
     clear()
     setPaymentMethod('cash')
+    setCustomerName('')
+    setCustomerPhone('')
   }
 
   function handleHold() {
@@ -181,6 +187,24 @@ export default function CartPanel() {
       </div>
 
       <div className="border-t border-slate-800 p-4">
+        <div className="mb-3 flex gap-2">
+          <input
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+            placeholder="Customer name (optional)"
+            aria-label="Customer name"
+            className="min-w-0 flex-1 rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm outline-none focus:border-amber-500"
+          />
+          <input
+            value={customerPhone}
+            onChange={(e) => setCustomerPhone(e.target.value)}
+            placeholder="Phone"
+            aria-label="Customer phone"
+            inputMode="tel"
+            className="w-28 rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm outline-none focus:border-amber-500"
+          />
+        </div>
+
         <div className="mb-3">
           <span className="text-[11px] text-slate-500">Payment</span>
           <div className="mt-1 flex gap-2">
