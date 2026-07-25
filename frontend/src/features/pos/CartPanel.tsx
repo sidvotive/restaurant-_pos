@@ -7,6 +7,7 @@ import { useOrders } from '../orders/OrdersStore'
 import { useTables } from '../tables/TablesStore'
 import { useHeldBills } from '../held/HeldBillsStore'
 import { useInventory } from '../inventory/InventoryStore'
+import { applyCoupon } from '../coupons/coupons'
 
 const ORDER_TYPES: { value: OrderType; label: string }[] = [
   { value: 'dine-in', label: 'Dine-in' },
@@ -46,6 +47,8 @@ export default function CartPanel() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
+  const [couponInput, setCouponInput] = useState('')
+  const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
   const dineInTable = orderType === 'dine-in' ? selectedTable : null
 
@@ -74,6 +77,16 @@ export default function CartPanel() {
     setTip(parseAmountToMinor(value) ?? 0)
   }
 
+  function handleApplyCoupon() {
+    const result = applyCoupon(couponInput, totals.subtotalMinor)
+    if (result.ok) {
+      setDiscount(result.discountMinor)
+      setCouponMsg({ ok: true, text: `${couponInput.trim().toUpperCase()} — ${result.label}` })
+    } else {
+      setCouponMsg({ ok: false, text: result.error })
+    }
+  }
+
   function handleSend() {
     if (itemCount === 0) return
     const order = placeOrder({
@@ -97,6 +110,8 @@ export default function CartPanel() {
     setPaymentMethod('cash')
     setCustomerName('')
     setCustomerPhone('')
+    setCouponInput('')
+    setCouponMsg(null)
   }
 
   function handleHold() {
@@ -111,6 +126,8 @@ export default function CartPanel() {
     })
     if (dineInTable) select(null)
     clear()
+    setCouponInput('')
+    setCouponMsg(null)
   }
 
   return (
@@ -228,6 +245,30 @@ export default function CartPanel() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="mb-3">
+          <div className="flex gap-2">
+            <input
+              value={couponInput}
+              onChange={(e) => setCouponInput(e.target.value)}
+              placeholder="Coupon code"
+              aria-label="Coupon code"
+              className="min-w-0 flex-1 rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm uppercase outline-none focus:border-amber-500"
+            />
+            <button
+              type="button"
+              onClick={handleApplyCoupon}
+              className="rounded-lg bg-slate-800 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-slate-700"
+            >
+              Apply
+            </button>
+          </div>
+          {couponMsg && (
+            <p className={`mt-1 text-[11px] ${couponMsg.ok ? 'text-emerald-400' : 'text-rose-400'}`}>
+              {couponMsg.text}
+            </p>
+          )}
         </div>
 
         <div className="mb-3 flex gap-2">
