@@ -8,6 +8,8 @@ import {
   topItems,
 } from '../features/reports/salesReport'
 import { ordersToCsv } from '../features/reports/exportCsv'
+import { DATE_RANGES, filterByRange, type DateRange } from '../features/reports/dateRange'
+import { useState } from 'react'
 
 const TYPE_LABEL: Record<OrderType, string> = {
   'dine-in': 'Dine-in',
@@ -68,13 +70,15 @@ function BreakdownBars({ title, rows }: { title: string; rows: BarRow[] }) {
 
 export default function ReportsPage() {
   const { orders } = useOrders()
-  const summary = summarizeSales(orders)
-  const byType = salesByType(orders)
-  const byPayment = salesByPayment(orders)
-  const top = topItems(orders, 5)
+  const [range, setRange] = useState<DateRange>('all')
+  const filtered = filterByRange(orders, range, Date.now())
+  const summary = summarizeSales(filtered)
+  const byType = salesByType(filtered)
+  const byPayment = salesByPayment(filtered)
+  const top = topItems(filtered, 5)
 
   function handleExport() {
-    const csv = ordersToCsv(orders)
+    const csv = ordersToCsv(filtered)
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -104,7 +108,31 @@ export default function ReportsPage() {
           <p>No sales yet. Orders sent from the POS show up here.</p>
         </div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto p-6">
+        <>
+          <div className="flex gap-2 border-b border-slate-800 px-6 py-3">
+            {DATE_RANGES.map((r) => (
+              <button
+                key={r.value}
+                type="button"
+                onClick={() => setRange(r.value)}
+                className={[
+                  'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
+                  r.value === range
+                    ? 'bg-amber-500 text-slate-950'
+                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700',
+                ].join(' ')}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="flex flex-1 items-center justify-center p-6 text-center text-slate-500">
+              <p>No sales in this range.</p>
+            </div>
+          ) : (
+            <div className="min-h-0 flex-1 overflow-y-auto p-6">
           {/* KPI tiles — hero numbers, no chart. */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
             <StatTile label="Orders" value={String(summary.orderCount)} />
@@ -156,7 +184,9 @@ export default function ReportsPage() {
               ))}
             </ul>
           </section>
-        </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
