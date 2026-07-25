@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { OrderType } from '../../types/domain'
+import type { OrderType, PaymentMethod } from '../../types/domain'
 import { formatMinor, parseAmountToMinor } from '../../lib/money'
 import { lineTotalMinor } from '../cart/cartTotals'
 import { useCart } from '../cart/CartContext'
@@ -11,6 +11,13 @@ const ORDER_TYPES: { value: OrderType; label: string }[] = [
   { value: 'dine-in', label: 'Dine-in' },
   { value: 'takeaway', label: 'Takeaway' },
   { value: 'delivery', label: 'Delivery' },
+]
+
+const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
+  { value: 'cash', label: 'Cash' },
+  { value: 'card', label: 'Card' },
+  { value: 'upi', label: 'UPI' },
+  { value: 'qr', label: 'QR' },
 ]
 
 export default function CartPanel() {
@@ -34,6 +41,7 @@ export default function CartPanel() {
   const [lastSent, setLastSent] = useState<number | null>(null)
   const [discountInput, setDiscountInput] = useState('')
   const [tipInput, setTipInput] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
 
   const dineInTable = orderType === 'dine-in' ? selectedTable : null
 
@@ -69,6 +77,7 @@ export default function CartPanel() {
       orderType,
       totalMinor: totals.totalMinor,
       tableLabel: dineInTable?.label,
+      paymentMethod,
     })
     // Seat the table and release the selection for the next order.
     if (dineInTable) {
@@ -77,6 +86,7 @@ export default function CartPanel() {
     }
     setLastSent(order.number)
     clear()
+    setPaymentMethod('cash')
   }
 
   function handleHold() {
@@ -171,6 +181,27 @@ export default function CartPanel() {
       </div>
 
       <div className="border-t border-slate-800 p-4">
+        <div className="mb-3">
+          <span className="text-[11px] text-slate-500">Payment</span>
+          <div className="mt-1 flex gap-2">
+            {PAYMENT_METHODS.map((pm) => (
+              <button
+                key={pm.value}
+                type="button"
+                onClick={() => setPaymentMethod(pm.value)}
+                className={[
+                  'flex-1 rounded-lg px-2 py-2 text-xs font-semibold transition-colors',
+                  pm.value === paymentMethod
+                    ? 'bg-amber-500 text-slate-950'
+                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700',
+                ].join(' ')}
+              >
+                {pm.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="mb-3 flex gap-2">
           <label className="flex-1">
             <span className="text-[11px] text-slate-500">Discount (₹)</span>

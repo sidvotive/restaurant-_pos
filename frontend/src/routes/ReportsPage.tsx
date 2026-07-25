@@ -1,12 +1,31 @@
-import type { OrderType } from '../types/domain'
+import type { OrderType, PaymentMethod } from '../types/domain'
 import { formatMinor } from '../lib/money'
 import { useOrders } from '../features/orders/OrdersStore'
-import { salesByType, summarizeSales, topItems } from '../features/reports/salesReport'
+import {
+  salesByPayment,
+  salesByType,
+  summarizeSales,
+  topItems,
+} from '../features/reports/salesReport'
 
 const TYPE_LABEL: Record<OrderType, string> = {
   'dine-in': 'Dine-in',
   takeaway: 'Takeaway',
   delivery: 'Delivery',
+}
+
+const PAYMENT_LABEL: Record<PaymentMethod, string> = {
+  cash: 'Cash',
+  card: 'Card',
+  upi: 'UPI',
+  qr: 'QR',
+}
+
+interface BarRow {
+  key: string
+  label: string
+  count: number
+  salesMinor: number
 }
 
 function StatTile({ label, value }: { label: string; value: string }) {
@@ -18,12 +37,40 @@ function StatTile({ label, value }: { label: string; value: string }) {
   )
 }
 
+/** Single-series magnitude bars (one hue), each row directly labelled. */
+function BreakdownBars({ title, rows }: { title: string; rows: BarRow[] }) {
+  const maxSales = Math.max(1, ...rows.map((r) => r.salesMinor))
+  return (
+    <section className="mt-8">
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">{title}</h2>
+      <div className="space-y-3">
+        {rows.map((row) => (
+          <div key={row.key} className="flex items-center gap-3">
+            <span className="w-20 shrink-0 text-sm text-slate-300">{row.label}</span>
+            <div className="h-3 flex-1 overflow-hidden rounded-md bg-slate-800">
+              <div
+                className="h-full rounded-md bg-amber-500"
+                style={{ width: `${(row.salesMinor / maxSales) * 100}%` }}
+                title={`${row.count} order${row.count === 1 ? '' : 's'} · ${formatMinor(row.salesMinor)}`}
+              />
+            </div>
+            <span className="w-16 shrink-0 text-right text-xs text-slate-400">{row.count}</span>
+            <span className="w-24 shrink-0 text-right text-sm font-medium text-slate-200">
+              {formatMinor(row.salesMinor)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 export default function ReportsPage() {
   const { orders } = useOrders()
   const summary = summarizeSales(orders)
   const byType = salesByType(orders)
+  const byPayment = salesByPayment(orders)
   const top = topItems(orders, 5)
-  const maxTypeSales = Math.max(1, ...byType.map((r) => r.salesMinor))
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -45,34 +92,25 @@ export default function ReportsPage() {
             <StatTile label="Items sold" value={String(summary.itemCount)} />
           </div>
 
-          {/* Sales by order type — single-series magnitude bars (one hue). */}
-          <section className="mt-8">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
-              Sales by order type
-            </h2>
-            <div className="space-y-3">
-              {byType.map((row) => (
-                <div key={row.type} className="flex items-center gap-3">
-                  <span className="w-20 shrink-0 text-sm text-slate-300">
-                    {TYPE_LABEL[row.type]}
-                  </span>
-                  <div className="h-3 flex-1 overflow-hidden rounded-md bg-slate-800">
-                    <div
-                      className="h-full rounded-md bg-amber-500"
-                      style={{ width: `${(row.salesMinor / maxTypeSales) * 100}%` }}
-                      title={`${row.count} order${row.count === 1 ? '' : 's'} · ${formatMinor(row.salesMinor)}`}
-                    />
-                  </div>
-                  <span className="w-16 shrink-0 text-right text-xs text-slate-400">
-                    {row.count}
-                  </span>
-                  <span className="w-24 shrink-0 text-right text-sm font-medium text-slate-200">
-                    {formatMinor(row.salesMinor)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
+          {/* Single-series magnitude bars (one hue). */}
+          <BreakdownBars
+            title="Sales by order type"
+            rows={byType.map((r) => ({
+              key: r.type,
+              label: TYPE_LABEL[r.type],
+              count: r.count,
+              salesMinor: r.salesMinor,
+            }))}
+          />
+          <BreakdownBars
+            title="Sales by payment mode"
+            rows={byPayment.map((r) => ({
+              key: r.method,
+              label: PAYMENT_LABEL[r.method],
+              count: r.count,
+              salesMinor: r.salesMinor,
+            }))}
+          />
 
           {/* Top items. */}
           <section className="mt-8">

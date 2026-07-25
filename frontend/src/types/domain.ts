@@ -4,6 +4,8 @@
 
 export type OrderType = 'dine-in' | 'takeaway' | 'delivery'
 
+export type PaymentMethod = 'cash' | 'card' | 'upi' | 'qr'
+
 export interface Category {
   id: string
   name: string
@@ -50,6 +52,8 @@ export interface Order {
   placedAt: string
   /** Dine-in table label, when the order is tied to a table. */
   tableLabel?: string
+  /** How the bill was settled. Optional for orders placed before this was captured. */
+  paymentMethod?: PaymentMethod
 }
 
 // A parked bill that can be resumed later (POS hold/resume, issue #7).

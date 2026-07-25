@@ -47,6 +47,11 @@ export default function OrdersPage() {
                   <span className="flex-1 text-sm text-slate-400">
                     {items} item{items === 1 ? '' : 's'}
                   </span>
+                  {order.paymentMethod && (
+                    <span className="w-12 text-xs uppercase text-slate-500">
+                      {order.paymentMethod}
+                    </span>
+                  )}
                   <span className="text-xs text-slate-500">
                     {TIME_FMT.format(new Date(order.placedAt))}
                   </span>

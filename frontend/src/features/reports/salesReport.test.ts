@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Order, OrderType, Product } from '../../types/domain'
-import { salesByType, summarizeSales, topItems } from './salesReport'
+import { salesByPayment, salesByType, summarizeSales, topItems } from './salesReport'
 
 const product = (name: string, priceMinor: number): Product => ({
   id: name,
@@ -55,6 +55,21 @@ describe('salesByType', () => {
     expect(rows.map((r) => r.type)).toEqual(['dine-in', 'takeaway', 'delivery'])
     expect(rows[0]).toEqual({ type: 'dine-in', count: 2, salesMinor: 50000 })
     expect(rows[1]).toEqual({ type: 'takeaway', count: 0, salesMinor: 0 })
+  })
+})
+
+describe('salesByPayment', () => {
+  it('groups by method in fixed order, defaulting missing to cash', () => {
+    const orders = [
+      { ...order('dine-in', 30000), paymentMethod: 'card' as const },
+      { ...order('takeaway', 10000), paymentMethod: 'upi' as const },
+      order('delivery', 5000), // no paymentMethod → counts as cash
+    ]
+    const rows = salesByPayment(orders)
+    expect(rows.map((r) => r.method)).toEqual(['cash', 'card', 'upi', 'qr'])
+    expect(rows[0]).toEqual({ method: 'cash', count: 1, salesMinor: 5000 })
+    expect(rows[1]).toEqual({ method: 'card', count: 1, salesMinor: 30000 })
+    expect(rows[3]).toEqual({ method: 'qr', count: 0, salesMinor: 0 })
   })
 })
 

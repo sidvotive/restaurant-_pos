@@ -1,4 +1,4 @@
-import type { Order, OrderType } from '../../types/domain'
+import type { Order, OrderType, PaymentMethod } from '../../types/domain'
 import { lineTotalMinor } from '../cart/cartTotals'
 
 export interface SalesSummary {
@@ -20,7 +20,14 @@ export interface TopItemRow {
   salesMinor: number
 }
 
+export interface PaymentBreakdownRow {
+  method: PaymentMethod
+  count: number
+  salesMinor: number
+}
+
 const ORDER_TYPES: OrderType[] = ['dine-in', 'takeaway', 'delivery']
+const PAYMENT_METHODS: PaymentMethod[] = ['cash', 'card', 'upi', 'qr']
 
 export function summarizeSales(orders: Order[]): SalesSummary {
   const orderCount = orders.length
@@ -46,6 +53,19 @@ export function salesByType(orders: Order[]): TypeBreakdownRow[] {
       type,
       count: forType.length,
       salesMinor: forType.reduce((sum, o) => sum + o.totalMinor, 0),
+    }
+  })
+}
+
+/** Sales grouped by payment method (fixed order, includes zeros). Orders
+ *  placed before payment capture default to cash. */
+export function salesByPayment(orders: Order[]): PaymentBreakdownRow[] {
+  return PAYMENT_METHODS.map((method) => {
+    const forMethod = orders.filter((o) => (o.paymentMethod ?? 'cash') === method)
+    return {
+      method,
+      count: forMethod.length,
+      salesMinor: forMethod.reduce((sum, o) => sum + o.totalMinor, 0),
     }
   })
 }

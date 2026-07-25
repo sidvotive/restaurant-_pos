@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNode } from 'react'
-import type { CartLine, Order, OrderType } from '../../types/domain'
+import type { CartLine, Order, OrderType, PaymentMethod } from '../../types/domain'
 import { loadJson, saveJson } from '../../lib/persist'
 import { ordersReducer, initialOrdersState, type OrdersState } from './ordersReducer'
 
@@ -10,6 +10,7 @@ interface PlaceOrderInput {
   orderType: OrderType
   totalMinor: number
   tableLabel?: string
+  paymentMethod: PaymentMethod
 }
 
 interface OrdersContextValue {
@@ -48,7 +49,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
   const value = useMemo<OrdersContextValue>(
     () => ({
       orders: state.orders,
-      placeOrder: ({ lines, orderType, totalMinor, tableLabel }) => {
+      placeOrder: ({ lines, orderType, totalMinor, tableLabel, paymentMethod }) => {
         const order: Order = {
           id: newId(),
           number: nextNumber(state.orders),
@@ -58,6 +59,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
           status: 'placed',
           placedAt: new Date().toISOString(),
           tableLabel,
+          paymentMethod,
         }
         dispatch({ type: 'place', order })
         return order
