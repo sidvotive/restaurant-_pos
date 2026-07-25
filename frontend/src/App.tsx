@@ -8,12 +8,14 @@ import TablesPage from './routes/TablesPage'
 import MenuPage from './routes/MenuPage'
 import ReportsPage from './routes/ReportsPage'
 import CustomersPage from './routes/CustomersPage'
+import InventoryPage from './routes/InventoryPage'
 import LoginPage from './routes/LoginPage'
 import { AuthProvider } from './features/auth/AuthContext'
 import { OrdersProvider } from './features/orders/OrdersStore'
 import { TablesProvider } from './features/tables/TablesStore'
 import { MenuProvider } from './features/menu/MenuStore'
 import { HeldBillsProvider } from './features/held/HeldBillsStore'
+import { InventoryProvider } from './features/inventory/InventoryStore'
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -31,6 +33,7 @@ const router = createBrowserRouter([
           { path: 'menu', element: <MenuPage /> },
           { path: 'reports', element: <ReportsPage /> },
           { path: 'customers', element: <CustomersPage /> },
+          { path: 'inventory', element: <InventoryPage /> },
         ],
       },
     ],
@@ -41,13 +44,15 @@ export default function App() {
   return (
     <AuthProvider>
       <MenuProvider>
-        <TablesProvider>
-          <OrdersProvider>
-            <HeldBillsProvider>
-              <RouterProvider router={router} />
-            </HeldBillsProvider>
-          </OrdersProvider>
-        </TablesProvider>
+        <InventoryProvider>
+          <TablesProvider>
+            <OrdersProvider>
+              <HeldBillsProvider>
+                <RouterProvider router={router} />
+              </HeldBillsProvider>
+            </OrdersProvider>
+          </TablesProvider>
+        </InventoryProvider>
       </MenuProvider>
     </AuthProvider>
   )

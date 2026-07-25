@@ -6,6 +6,7 @@ import { useCart } from '../cart/CartContext'
 import { useOrders } from '../orders/OrdersStore'
 import { useTables } from '../tables/TablesStore'
 import { useHeldBills } from '../held/HeldBillsStore'
+import { useInventory } from '../inventory/InventoryStore'
 
 const ORDER_TYPES: { value: OrderType; label: string }[] = [
   { value: 'dine-in', label: 'Dine-in' },
@@ -38,6 +39,7 @@ export default function CartPanel() {
   const { placeOrder } = useOrders()
   const { selectedTable, select, setStatus } = useTables()
   const { hold } = useHeldBills()
+  const { decrementForOrder } = useInventory()
   const [lastSent, setLastSent] = useState<number | null>(null)
   const [discountInput, setDiscountInput] = useState('')
   const [tipInput, setTipInput] = useState('')
@@ -83,6 +85,8 @@ export default function CartPanel() {
       customerName,
       customerPhone,
     })
+    // Draw down tracked stock for the items sold.
+    decrementForOrder(lines)
     // Seat the table and release the selection for the next order.
     if (dineInTable) {
       setStatus(dineInTable.id, 'occupied')
