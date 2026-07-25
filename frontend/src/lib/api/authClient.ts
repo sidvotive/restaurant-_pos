@@ -1,8 +1,8 @@
 import type { AuthSession, RegisterInput } from '../../features/auth/types'
+import { apiFetch } from './http'
 
 // The auth API the app depends on — shape matches the backend Identity
-// endpoints (POST /api/auth/register|login|refresh, issue #2). A mock backs
-// it until the backend is reachable; swap in an HTTP implementation later.
+// endpoints (POST /api/auth/register|login|refresh, issue #2).
 export interface AuthApi {
   login(email: string, password: string): Promise<AuthSession>
   register(input: RegisterInput): Promise<AuthSession>
@@ -11,10 +11,19 @@ export interface AuthApi {
 
 export class AuthError extends Error {}
 
-/** Demo credentials surfaced on the login screen while the backend is mocked. */
+// ---- Real HTTP implementation (talks to the .NET Identity service) ----
+export const httpAuthApi: AuthApi = {
+  login: (email, password) =>
+    apiFetch<AuthSession>('/api/auth/login', { method: 'POST', auth: false, body: { email, password } }),
+  register: (input) =>
+    apiFetch<AuthSession>('/api/auth/register', { method: 'POST', auth: false, body: input }),
+  refresh: (refreshToken) =>
+    apiFetch<AuthSession>('/api/auth/refresh', { method: 'POST', auth: false, body: { refreshToken } }),
+}
+
+// ---- Mock implementation (used by unit tests; no backend required) ----
 export const DEMO_EMAIL = 'owner@demo.test'
 export const DEMO_PASSWORD = 'password123'
-
 const ACCESS_TOKEN_MINUTES = 15
 
 function delay<T>(value: T, ms = 200): Promise<T> {
@@ -54,5 +63,6 @@ export const mockAuthApi: AuthApi = {
   },
 }
 
-// Single access point. Replace with the real HTTP client once the backend exists.
-export const authApi: AuthApi = mockAuthApi
+// This is the full-stack branch: default to the real API. Set VITE_USE_MOCK_AUTH=true
+// to fall back to the mock (pure-frontend, no backend needed).
+export const authApi: AuthApi = import.meta.env.VITE_USE_MOCK_AUTH === 'true' ? mockAuthApi : httpAuthApi

@@ -34,9 +34,17 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
+// Dev-friendly CORS. The frontend normally reaches the API through the Vite
+// proxy (same origin), so this mainly covers calling the API directly.
+// Bearer-token auth (no cookies), so AllowAnyOrigin is safe. Restrict in prod.
+builder.Services.AddCors(options =>
+    options.AddDefaultPolicy(policy =>
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 

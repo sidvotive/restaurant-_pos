@@ -2,12 +2,14 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react'
 import { loadJson, saveJson } from '../../lib/persist'
 import { authApi } from '../../lib/api/authClient'
+import { setAuthToken } from '../../lib/api/http'
 import { isSessionValid } from './session'
 import type { AuthSession, RegisterInput } from './types'
 
@@ -33,6 +35,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Drop an expired session on load.
     return isSessionValid(stored, Date.now()) ? stored : null
   })
+
+  // Keep the HTTP client's bearer token in sync with the session (covers
+  // initial load from storage, login/register, and logout).
+  useEffect(() => {
+    setAuthToken(session?.accessToken ?? null)
+  }, [session])
 
   const apply = useCallback((next: AuthSession) => {
     setSession(next)
