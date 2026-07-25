@@ -31,7 +31,19 @@ describe('summarizeSales', () => {
       totalSalesMinor: 0,
       averageOrderMinor: 0,
       itemCount: 0,
+      taxCollectedMinor: 0,
+      discountGivenMinor: 0,
     })
+  })
+
+  it('sums tax collected and discounts given from the order breakdown', () => {
+    const orders = [
+      { ...order('dine-in', 30000), taxMinor: 1400, discountMinor: 1000 },
+      { ...order('takeaway', 10000), taxMinor: 400 }, // no discount
+    ]
+    const s = summarizeSales(orders)
+    expect(s.taxCollectedMinor).toBe(1800)
+    expect(s.discountGivenMinor).toBe(1000)
   })
 
   it('totals sales, counts items, and averages per order', () => {

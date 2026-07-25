@@ -79,7 +79,7 @@ export default function CartPanel() {
     const order = placeOrder({
       lines,
       orderType,
-      totalMinor: totals.totalMinor,
+      totals,
       tableLabel: dineInTable?.label,
       paymentMethod,
       customerName,

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNode } from 'react'
-import type { CartLine, Order, OrderType, PaymentMethod } from '../../types/domain'
+import type { BillTotals, CartLine, Order, OrderType, PaymentMethod } from '../../types/domain'
 import { loadJson, saveJson } from '../../lib/persist'
 import { ordersReducer, initialOrdersState, type OrdersState } from './ordersReducer'
 
@@ -8,7 +8,7 @@ const STORAGE_KEY = 'rpos.orders'
 interface PlaceOrderInput {
   lines: CartLine[]
   orderType: OrderType
-  totalMinor: number
+  totals: BillTotals
   tableLabel?: string
   paymentMethod: PaymentMethod
   customerName?: string
@@ -54,7 +54,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       placeOrder: ({
         lines,
         orderType,
-        totalMinor,
+        totals,
         tableLabel,
         paymentMethod,
         customerName,
@@ -65,7 +65,11 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
           number: nextNumber(state.orders),
           type: orderType,
           lines,
-          totalMinor,
+          totalMinor: totals.totalMinor,
+          subtotalMinor: totals.subtotalMinor,
+          discountMinor: totals.discountMinor,
+          taxMinor: totals.taxMinor,
+          tipMinor: totals.tipMinor,
           status: 'placed',
           placedAt: new Date().toISOString(),
           tableLabel,

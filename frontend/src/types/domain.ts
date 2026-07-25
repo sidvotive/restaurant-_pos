@@ -47,6 +47,11 @@ export interface Order {
   type: OrderType
   lines: CartLine[]
   totalMinor: number
+  /** Bill breakdown at settlement. Optional for orders placed before this was captured. */
+  subtotalMinor?: number
+  discountMinor?: number
+  taxMinor?: number
+  tipMinor?: number
   status: OrderStatus
   /** ISO timestamp. */
   placedAt: string

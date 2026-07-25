@@ -6,6 +6,10 @@ export interface SalesSummary {
   totalSalesMinor: number
   averageOrderMinor: number
   itemCount: number
+  /** Tax collected across orders (0 for orders placed before breakdown capture). */
+  taxCollectedMinor: number
+  /** Total discounts given across orders. */
+  discountGivenMinor: number
 }
 
 export interface TypeBreakdownRow {
@@ -42,6 +46,8 @@ export function summarizeSales(orders: Order[]): SalesSummary {
     // Integer minor units; average rounded to the nearest unit.
     averageOrderMinor: orderCount === 0 ? 0 : Math.round(totalSalesMinor / orderCount),
     itemCount,
+    taxCollectedMinor: orders.reduce((sum, o) => sum + (o.taxMinor ?? 0), 0),
+    discountGivenMinor: orders.reduce((sum, o) => sum + (o.discountMinor ?? 0), 0),
   }
 }
 

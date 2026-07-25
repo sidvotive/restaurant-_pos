@@ -85,11 +85,13 @@ export default function ReportsPage() {
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto p-6">
           {/* KPI tiles — hero numbers, no chart. */}
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
             <StatTile label="Orders" value={String(summary.orderCount)} />
             <StatTile label="Sales" value={formatMinor(summary.totalSalesMinor)} />
             <StatTile label="Avg order" value={formatMinor(summary.averageOrderMinor)} />
             <StatTile label="Items sold" value={String(summary.itemCount)} />
+            <StatTile label="Tax collected" value={formatMinor(summary.taxCollectedMinor)} />
+            <StatTile label="Discounts" value={formatMinor(summary.discountGivenMinor)} />
           </div>
 
           {/* Single-series magnitude bars (one hue). */}
