@@ -1,10 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-  <!-- API layer: HTTP endpoints, auth, composition root. -->
+  <!-- API layer: HTTP endpoints, auth, composition root.
+       Hosts multiple modules (Identity + Menu) as a modular monolith. -->
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Identity.Application\Identity.Application.csproj" />
     <ProjectReference Include="..\Identity.Infrastructure\Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Menu\Menu.Application\Menu.Application.csproj" />
+    <ProjectReference Include="..\..\Menu\Menu.Infrastructure\Menu.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Orders\Orders.Application\Orders.Application.csproj" />
+    <ProjectReference Include="..\..\Orders\Orders.Infrastructure\Orders.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Inventory\Inventory.Application\Inventory.Application.csproj" />
+    <ProjectReference Include="..\..\Inventory\Inventory.Infrastructure\Inventory.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Tables\Tables.Application\Tables.Application.csproj" />
+    <ProjectReference Include="..\..\Tables\Tables.Infrastructure\Tables.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

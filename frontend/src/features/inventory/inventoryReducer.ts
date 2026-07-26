@@ -6,6 +6,7 @@ export interface InventoryState {
 }
 
 export type InventoryAction =
+  | { type: 'load'; stock: Record<string, number> }
   | { type: 'setStock'; productId: string; quantity: number }
   | { type: 'decrementForOrder'; lines: CartLine[] }
 
@@ -13,6 +14,8 @@ export const initialInventoryState: InventoryState = { stock: {} }
 
 export function inventoryReducer(state: InventoryState, action: InventoryAction): InventoryState {
   switch (action.type) {
+    case 'load':
+      return { stock: action.stock }
     case 'setStock':
       return {
         stock: { ...state.stock, [action.productId]: Math.max(0, Math.round(action.quantity)) },

@@ -6,6 +6,7 @@ export interface MenuState {
 }
 
 export type MenuAction =
+  | { type: 'load'; state: MenuState }
   | { type: 'addCategory'; category: Category }
   | { type: 'renameCategory'; id: string; name: string }
   | { type: 'removeCategory'; id: string }
@@ -15,6 +16,8 @@ export type MenuAction =
 
 export function menuReducer(state: MenuState, action: MenuAction): MenuState {
   switch (action.type) {
+    case 'load':
+      return action.state
     case 'addCategory':
       return { ...state, categories: [...state.categories, action.category] }
 

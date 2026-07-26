@@ -1,9 +1,16 @@
-using Identity.Application.Common;
 using Microsoft.AspNetCore.Mvc;
+using IdentityValidation = Identity.Application.Common.ValidationException;
+using IdentityAuth = Identity.Application.Common.AuthenticationException;
+using MenuValidation = Menu.Application.Common.ValidationException;
+using MenuNotFound = Menu.Application.Common.NotFoundException;
+using OrdersValidation = Orders.Application.Common.ValidationException;
+using OrdersNotFound = Orders.Application.Common.NotFoundException;
+using TablesValidation = Tables.Application.Common.ValidationException;
+using TablesNotFound = Tables.Application.Common.NotFoundException;
 
 namespace Identity.Api.Middleware;
 
-/// <summary>Maps application exceptions to ProblemDetails responses.</summary>
+/// <summary>Maps application exceptions (from any hosted module) to ProblemDetails.</summary>
 public sealed class ExceptionHandlingMiddleware(
     RequestDelegate next,
     ILogger<ExceptionHandlingMiddleware> logger)
@@ -14,13 +21,41 @@ public sealed class ExceptionHandlingMiddleware(
         {
             await next(context);
         }
-        catch (ValidationException ex)
+        catch (IdentityValidation ex)
         {
             await WriteProblem(context, StatusCodes.Status400BadRequest, "Validation failed", ex.Message);
         }
-        catch (AuthenticationException ex)
+        catch (MenuValidation ex)
+        {
+            await WriteProblem(context, StatusCodes.Status400BadRequest, "Validation failed", ex.Message);
+        }
+        catch (MenuNotFound ex)
+        {
+            await WriteProblem(context, StatusCodes.Status404NotFound, "Not found", ex.Message);
+        }
+        catch (OrdersValidation ex)
+        {
+            await WriteProblem(context, StatusCodes.Status400BadRequest, "Validation failed", ex.Message);
+        }
+        catch (OrdersNotFound ex)
+        {
+            await WriteProblem(context, StatusCodes.Status404NotFound, "Not found", ex.Message);
+        }
+        catch (TablesValidation ex)
+        {
+            await WriteProblem(context, StatusCodes.Status400BadRequest, "Validation failed", ex.Message);
+        }
+        catch (TablesNotFound ex)
+        {
+            await WriteProblem(context, StatusCodes.Status404NotFound, "Not found", ex.Message);
+        }
+        catch (IdentityAuth ex)
         {
             await WriteProblem(context, StatusCodes.Status401Unauthorized, "Authentication failed", ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            await WriteProblem(context, StatusCodes.Status401Unauthorized, "Unauthorized", ex.Message);
         }
         catch (Exception ex)
         {

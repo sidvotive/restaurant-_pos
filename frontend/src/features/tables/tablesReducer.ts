@@ -6,12 +6,23 @@ export interface TablesState {
 }
 
 export type TablesAction =
+  | { type: 'load'; tables: RestaurantTable[] }
   | { type: 'select'; tableId: string | null }
   | { type: 'setStatus'; tableId: string; status: TableStatus }
   | { type: 'reserve'; tableId: string; name: string }
 
 export function tablesReducer(state: TablesState, action: TablesAction): TablesState {
   switch (action.type) {
+    case 'load': {
+      // Keep the current selection only if that table is still present and free.
+      const stillSelectable = action.tables.some(
+        (t) => t.id === state.selectedTableId && t.status === 'free',
+      )
+      return {
+        tables: action.tables,
+        selectedTableId: stillSelectable ? state.selectedTableId : null,
+      }
+    }
     case 'select':
       return { ...state, selectedTableId: action.tableId }
     case 'setStatus': {

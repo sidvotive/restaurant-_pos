@@ -62,11 +62,33 @@ Full rationale in [`docs/architecture/tech-stack.md`](docs/architecture/tech-sta
 
 ## Getting started (for contributors)
 
-This is a scaffold. As modules land, per-directory READMEs (`backend/`, `frontend/`, `infra/`) will carry the concrete run/build instructions. For now:
-
 1. Read [`docs/product/vision.md`](docs/product/vision.md) and [`docs/architecture/README.md`](docs/architecture/README.md).
 2. Check [`docs/roadmap.md`](docs/roadmap.md) for the current phase and open work.
 3. Pick up an issue (see `.github/ISSUE_TEMPLATE/`).
+
+### Run the full stack (dev)
+
+The frontend talks to the backend **Identity** service for authentication; other
+features still run on client-side mock data (migration in progress).
+
+1. **Infrastructure** (PostgreSQL etc.):
+   ```bash
+   cp .env.example .env
+   docker compose -f infra/docker/docker-compose.yml up -d
+   ```
+2. **Backend** (needs the .NET 9 SDK — see [`backend/README.md`](backend/README.md) for the one-time solution/migration setup):
+   ```bash
+   dotnet run --project backend/src/Services/Identity/Identity.Api   # http://localhost:5080
+   ```
+3. **Frontend** (dev server proxies `/api` → `http://localhost:5080`):
+   ```bash
+   cd frontend && npm install && npm run dev                          # http://localhost:5173
+   ```
+4. Open http://localhost:5173, **create an account** on the sign-in screen (registers a
+   tenant + Owner via the real API), then use the app.
+
+**Frontend without a backend:** set `VITE_USE_MOCK_AUTH=true` (see `frontend/.env.example`)
+to use the built-in mock auth (`owner@demo.test` / `password123`).
 
 ## License
 

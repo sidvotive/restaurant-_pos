@@ -2,9 +2,7 @@
 
 .NET 9 Web API services following **Clean Architecture**, with **SignalR** for real-time features. Use cases are plain injectable services (no MediatR/CQRS for now — kept deliberately simple).
 
-> **Status:** Identity service with a working **auth vertical** (register / login / refresh), laid out in four Clean Architecture projects under `src/Services/Identity/`.
->
-> ⚠️ **Not yet build-verified.** This environment has no .NET SDK, so the code below has **not** been compiled or run. The first `dotnet build` (issue #1) may surface package-version or wiring fixes. Braces/namespaces were checked by hand; treat the versions as a starting point.
+> **Status:** modular-monolith API hosting the **Identity** (auth), **Menu**, **Orders**, **Inventory**, and **Tables** modules (all tenant-scoped). Identity's build was verified locally; the other modules were added afterward and should be built/migrated locally (this environment has no .NET SDK — braces/namespaces checked by hand, patterns mirror Identity).
 
 ## Identity service
 
@@ -42,25 +40,87 @@ backend/
 ```bash
 cd backend
 dotnet new sln -n RestaurantPos
-dotnet sln add src/Services/Identity/Identity.Domain/Identity.Domain.csproj \
-               src/Services/Identity/Identity.Application/Identity.Application.csproj \
-               src/Services/Identity/Identity.Infrastructure/Identity.Infrastructure.csproj \
-               src/Services/Identity/Identity.Api/Identity.Api.csproj
+dotnet sln add src/Services/Identity/**/*.csproj \
+               src/Services/Menu/**/*.csproj \
+               src/Services/Orders/**/*.csproj \
+               src/Services/Inventory/**/*.csproj \
+               src/Services/Tables/**/*.csproj
 dotnet build
 
-# Create the initial migration and apply it:
-dotnet tool install --global dotnet-ef      # once
-dotnet ef migrations add InitialIdentity \
-  --project src/Services/Identity/Identity.Infrastructure \
-  --startup-project src/Services/Identity/Identity.Api
-dotnet ef database update \
-  --project src/Services/Identity/Identity.Infrastructure \
-  --startup-project src/Services/Identity/Identity.Api
+# EF tooling (once):
+dotnet tool install --global dotnet-ef
 
-dotnet run --project src/Services/Identity/Identity.Api
+# Migrations — one per DbContext (the host runs both modules, so --context is required):
+STARTUP=src/Services/Identity/Identity.Api
+dotnet ef migrations add InitialIdentity --context IdentityDbContext \
+  --project src/Services/Identity/Identity.Infrastructure --startup-project $STARTUP
+dotnet ef migrations add InitialMenu --context MenuDbContext \
+  --project src/Services/Menu/Menu.Infrastructure --startup-project $STARTUP
+dotnet ef migrations add InitialOrders --context OrdersDbContext \
+  --project src/Services/Orders/Orders.Infrastructure --startup-project $STARTUP
+dotnet ef migrations add InitialInventory --context InventoryDbContext \
+  --project src/Services/Inventory/Inventory.Infrastructure --startup-project $STARTUP
+dotnet ef migrations add InitialTables --context TablesDbContext \
+  --project src/Services/Tables/Tables.Infrastructure --startup-project $STARTUP
+dotnet ef database update --context IdentityDbContext \
+  --project src/Services/Identity/Identity.Infrastructure --startup-project $STARTUP
+dotnet ef database update --context MenuDbContext \
+  --project src/Services/Menu/Menu.Infrastructure --startup-project $STARTUP
+dotnet ef database update --context OrdersDbContext \
+  --project src/Services/Orders/Orders.Infrastructure --startup-project $STARTUP
+dotnet ef database update --context InventoryDbContext \
+  --project src/Services/Inventory/Inventory.Infrastructure --startup-project $STARTUP
+dotnet ef database update --context TablesDbContext \
+  --project src/Services/Tables/Tables.Infrastructure --startup-project $STARTUP
+
+dotnet run --project src/Services/Identity/Identity.Api   # http://localhost:5080
 ```
 
+> **Modular monolith:** `Identity.Api` is the single host process; it composes the **Identity**, **Menu**, **Orders**, **Inventory**, and **Tables** modules (own layers, own `DbContext`, same PostgreSQL database). Each module can later be split into its own service along these boundaries.
+>
 > **Before any real use, replace the placeholder `Jwt:Secret`** in `appsettings.json` with a long random value supplied via configuration/secret store (it is dev-only). Once a `.sln` exists, CI builds and tests the backend automatically.
+
+### Menu module
+
+Tenant-scoped CRUD, hosted at `/api/menu` (all endpoints require auth; the tenant is read from the JWT `tenant_id` claim):
+
+| Method + path | Purpose |
+|---|---|
+| `GET /api/menu/` | The tenant's categories + products |
+| `POST /api/menu/categories` · `PUT /…/{id}` · `DELETE /…/{id}` | Category CRUD (delete cascades products) |
+| `POST /api/menu/products` · `PUT /…/{id}` · `DELETE /…/{id}` | Product CRUD |
+
+### Orders module
+
+Tenant-scoped, hosted at `/api/orders` (auth required; tenant from the JWT). Orders store their line snapshots and the full bill breakdown (subtotal/discount/tax/tip/total):
+
+| Method + path | Purpose |
+|---|---|
+| `GET /api/orders/` | The tenant's orders (newest first) |
+| `POST /api/orders/` | Place an order (server assigns the number) |
+| `POST /api/orders/{id}/advance` | placed → preparing → ready → served |
+| `POST /api/orders/{id}/cancel` | Cancel an order |
+| `DELETE /api/orders/` | Clear the tenant's orders |
+
+### Inventory module
+
+Tenant-scoped stock keyed by product id, hosted at `/api/inventory`:
+
+| Method + path | Purpose |
+|---|---|
+| `GET /api/inventory/` | Tracked stock (productId → quantity) |
+| `PUT /api/inventory/{productId}` | Set a product's stock (upsert) |
+| `POST /api/inventory/decrement` | Draw down stock for a list of `{productId, quantity}` (untracked products ignored) |
+
+### Tables module
+
+Tenant-scoped floor plan, hosted at `/api/tables`. A tenant with no tables yet gets a default layout (5 Ground Floor + 3 Terrace) seeded on first `GET`, so the floor screen is never empty. Which table a terminal is *billing* stays client-side; table *status/reservations* are shared server state.
+
+| Method + path | Purpose |
+|---|---|
+| `GET /api/tables/` | The tenant's tables (seeds a default layout on first access) |
+| `PUT /api/tables/{id}/status` | Set a table's status (`free` \| `occupied` \| `reserved`; clears the reservation when not `reserved`) |
+| `POST /api/tables/{id}/reserve` | Reserve a table for an optional guest name |
 
 ## Intended structure
 
