@@ -5,6 +5,8 @@ using MenuValidation = Menu.Application.Common.ValidationException;
 using MenuNotFound = Menu.Application.Common.NotFoundException;
 using OrdersValidation = Orders.Application.Common.ValidationException;
 using OrdersNotFound = Orders.Application.Common.NotFoundException;
+using TablesValidation = Tables.Application.Common.ValidationException;
+using TablesNotFound = Tables.Application.Common.NotFoundException;
 
 namespace Identity.Api.Middleware;
 
@@ -36,6 +38,14 @@ public sealed class ExceptionHandlingMiddleware(
             await WriteProblem(context, StatusCodes.Status400BadRequest, "Validation failed", ex.Message);
         }
         catch (OrdersNotFound ex)
+        {
+            await WriteProblem(context, StatusCodes.Status404NotFound, "Not found", ex.Message);
+        }
+        catch (TablesValidation ex)
+        {
+            await WriteProblem(context, StatusCodes.Status400BadRequest, "Validation failed", ex.Message);
+        }
+        catch (TablesNotFound ex)
         {
             await WriteProblem(context, StatusCodes.Status404NotFound, "Not found", ex.Message);
         }

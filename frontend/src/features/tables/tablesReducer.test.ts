@@ -57,6 +57,23 @@ describe('tablesReducer', () => {
     expect(state.selectedTableId).toBeNull()
   })
 
+  it('replaces the tables on load, keeping a still-free selection', () => {
+    let state = tablesReducer(baseState(), { type: 'select', tableId: 't1' })
+    state = tablesReducer(state, {
+      type: 'load',
+      tables: [table('t1', 'Ground Floor', 'free'), table('t9', 'Terrace', 'free')],
+    })
+    expect(state.tables.map((t) => t.id)).toEqual(['t1', 't9'])
+    expect(state.selectedTableId).toBe('t1')
+  })
+
+  it('drops the selection on load when the selected table is gone or no longer free', () => {
+    let state = tablesReducer(baseState(), { type: 'select', tableId: 't1' })
+    // t1 comes back occupied — it can no longer be billed, so deselect.
+    state = tablesReducer(state, { type: 'load', tables: [table('t1', 'Ground Floor', 'occupied')] })
+    expect(state.selectedTableId).toBeNull()
+  })
+
   it('clears the reservation name when the table is freed', () => {
     let state = tablesReducer(baseState(), { type: 'reserve', tableId: 't1', name: 'Asha' })
     state = tablesReducer(state, { type: 'setStatus', tableId: 't1', status: 'free' })

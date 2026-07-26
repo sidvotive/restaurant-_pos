@@ -13,5 +13,7 @@
     <ProjectReference Include="..\..\Orders\Orders.Infrastructure\Orders.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Inventory\Inventory.Application\Inventory.Application.csproj" />
     <ProjectReference Include="..\..\Inventory\Inventory.Infrastructure\Inventory.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Tables\Tables.Application\Tables.Application.csproj" />
+    <ProjectReference Include="..\..\Tables\Tables.Infrastructure\Tables.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
